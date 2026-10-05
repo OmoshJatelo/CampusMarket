@@ -1,6 +1,10 @@
 package com.smart.campusmarket;
+import java.io.Serializable;
 
-public class Product {
+//Make Product.java Implement Serializable
+//To pass an entire Product object through an Intent instead of passing every string field individually, make Product implement java.io.Serializable
+public class Product implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String title;
     private String price;
     private String location;

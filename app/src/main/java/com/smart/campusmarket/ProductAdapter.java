@@ -7,6 +7,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
+import android.content.Intent;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
@@ -26,14 +27,23 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     }
 
     // 2. Binds the data to the specific views
+
+
     @Override
     public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
         Product product = productList.get(position);
+
         holder.titleText.setText(product.getTitle());
         holder.priceText.setText(product.getPrice());
         holder.locationTimeText.setText(product.getLocation() + " • " + product.getTimePosted());
-    }
 
+        // Click Listener to open ProductDetailActivity
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), ProductDetailActivity.class);
+            intent.putExtra("extra_product", product);
+            v.getContext().startActivity(intent);
+        });
+    }
     // 3. Tells the RecyclerView how many items exist
     @Override
     public int getItemCount() {
