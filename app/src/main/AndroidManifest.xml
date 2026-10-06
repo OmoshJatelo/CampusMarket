@@ -30,6 +30,9 @@
         <activity
             android:name=".ProductDetailActivity"
             android:exported="false" />
+        <activity
+            android:name=".CreateListingActivity"
+            android:exported="false" />
 
     </application>
 
