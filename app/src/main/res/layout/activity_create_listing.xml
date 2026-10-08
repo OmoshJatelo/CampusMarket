@@ -1,56 +1,233 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/createMain"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:clipToPadding="false"
+    android:fillViewport="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sell an Item"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <EditText
-        android:id="@+id/editProductTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:hint="Item Name (e.g., Mini Fridge)"
-        android:inputType="textCapWords" />
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <EditText
-        android:id="@+id/editProductPrice"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="Price (e.g., KSh 4,500)"
-        android:inputType="text" />
+        <TextView
+            android:id="@+id/txtScreenTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/listing_screen_title_sale"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/editProductLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="Location (e.g., Hall 6)"
-        android:inputType="textCapWords" />
+        <!-- For sale / Wanted -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggleType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
 
-    <EditText
-        android:id="@+id/editSellerPhone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="WhatsApp Number (e.g., +254700000000)"
-        android:inputType="phone" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTypeSale"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/listing_type_sale" />
 
-    <Button
-        android:id="@+id/btnSubmitListing"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:padding="12dp"
-        android:text="Submit Listing" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTypeWanted"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/listing_type_wanted" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
-</LinearLayout>
+        <!-- Photos -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/listing_photos_label"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddPhotos"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/listing_add_photos" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/photoContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/txtPhotoCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp" />
+
+        <!-- Title -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutTitle"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/listing_hint_title_sale"
+            app:counterEnabled="true"
+            app:counterMaxLength="60">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editProductTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="textCapWords"
+                android:maxLength="60"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Category -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutCategory"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_category">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/dropCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Condition (hidden for Wanted posts) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutCondition"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_condition">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/dropCondition"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Price / budget (numbers only) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPrice"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_price_sale"
+            app:prefixText="KSh ">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editProductPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionNext"
+                android:inputType="number"
+                android:maxLength="9"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <CheckBox
+            android:id="@+id/chkNegotiable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/listing_negotiable" />
+
+        <!-- Location -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutLocation"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_location">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/dropLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Description -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutDescription"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_description"
+            app:counterEnabled="true"
+            app:counterMaxLength="300">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:imeOptions="actionNext"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLength="300"
+                android:minLines="3" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- WhatsApp number -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutPhone"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/listing_hint_phone"
+            app:helperText="@string/listing_helper_phone">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editSellerPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="phone"
+                android:maxLength="16"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSubmitListing"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:padding="12dp"
+            android:text="@string/listing_submit_sale" />
+
+    </LinearLayout>
+</ScrollView>

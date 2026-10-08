@@ -32,7 +32,8 @@
             android:exported="false" />
         <activity
             android:name=".CreateListingActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 

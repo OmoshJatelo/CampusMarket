@@ -1,15 +1,27 @@
 package com.smart.campusmarket;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.IntentCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.bumptech.glide.Glide;
+
+import java.util.List;
 
 public class ProductDetailActivity extends AppCompatActivity {
 
@@ -20,57 +32,110 @@ public class ProductDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_product_detail);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.detailMain), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
 
-        // 1. Initialize Views
-        TextView titleText = findViewById(R.id.detailTitle);
-        TextView priceText = findViewById(R.id.detailPrice);
-        TextView locationText = findViewById(R.id.detailLocation);
-        TextView timeText = findViewById(R.id.detailTime);
-        Button btnContact = findViewById(R.id.btnContactSeller);
-
-        // 2. Receive the Product object from Intent
-        Intent intent = getIntent();
-        Product product = (Product) intent.getSerializableExtra("extra_product");
-
-        // 3. Populate UI if product exists
+        Product product = IntentCompat.getSerializableExtra(
+                getIntent(), "extra_product", Product.class);
         if (product == null) {
             finish();
             return;
         }
 
-        titleText.setText(product.getTitle());
-        priceText.setText(product.getPrice());
-        locationText.setText("Location: " + product.getLocation());
-        timeText.setText("Posted: " + product.getTimePosted());
+        bindDetails(product);
+        bindGallery(product);
+        bindActions(product);
+    }
 
-        // 4. Handle Contact Button Click
-        // 4. Handle Contact Button Click
-        btnContact.setOnClickListener(v -> {
-            String phoneNumber = product.getSellerPhone();
+    private void bindDetails(Product p) {
+        ((TextView) findViewById(R.id.detailTitle)).setText(p.getTitle());
 
-            // Construct a pre-filled message
-            String message = "Hi, I saw your listing for the " + product.getTitle()
-                    + " on CampusMarket. Is it still available?";
+        String price = p.isWanted()
+                ? getString(R.string.product_budget_format, p.getPrice())
+                : (p.isNegotiable()
+                   ? getString(R.string.detail_price_negotiable, p.getPrice())
+                   : p.getPrice());
+        ((TextView) findViewById(R.id.detailPrice)).setText(price);
 
-            // Construct the WhatsApp API URI
-            // Uri.encode() ensures spaces and special characters don't break the URL
-            String url = "https://api.whatsapp.com/send?phone=" + phoneNumber
-                    + "&text=" + android.net.Uri.encode(message);
+        findViewById(R.id.detailWantedBadge)
+                .setVisibility(p.isWanted() ? View.VISIBLE : View.GONE);
 
-            // Create an Implicit Intent
-            Intent intent2 = new Intent(Intent.ACTION_VIEW);
-            intent2.setData(android.net.Uri.parse(url));
+        // Older seed posts have no category/condition/description, so hide empty rows.
+        setOptionalText(R.id.detailCategory, p.getCategory(), R.string.detail_category);
+        if (!p.isWanted()) {
+            setOptionalText(R.id.detailCondition, p.getCondition(), R.string.detail_condition);
+        } else {
+            findViewById(R.id.detailCondition).setVisibility(View.GONE);
+        }
+        setOptionalText(R.id.detailLocation, p.getLocation(), R.string.detail_location);
 
-            // Try to launch the Intent, handle the error gracefully if WhatsApp is missing
-            try {
-                startActivity(intent2);
-            } catch (android.content.ActivityNotFoundException e) {
-                Toast.makeText(this, "WhatsApp is not installed on your device", Toast.LENGTH_LONG).show();
-            }
-        });
+        ((TextView) findViewById(R.id.detailTime))
+                .setText(getString(R.string.detail_posted, p.getTimePosted()));
+
+        TextView description = findViewById(R.id.detailDescription);
+        if (p.getDescription() != null && !p.getDescription().isEmpty()) {
+            description.setText(p.getDescription());
+            description.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void setOptionalText(int viewId, String value, int formatRes) {
+        TextView view = findViewById(viewId);
+        if (value == null || value.isEmpty()) {
+            view.setVisibility(View.GONE);
+        } else {
+            view.setText(getString(formatRes, value));
+            view.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void bindGallery(Product p) {
+        HorizontalScrollView scroll = findViewById(R.id.detailGalleryScroll);
+        LinearLayout gallery = findViewById(R.id.detailGallery);
+        List<String> images = p.getImageUris();
+
+        if (images.isEmpty()) {
+            scroll.setVisibility(View.GONE);
+            return;
+        }
+
+        int width = dp(260);
+        int height = dp(220);
+        for (String image : images) {
+            ImageView iv = new ImageView(this);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(width, height);
+            lp.setMarginEnd(dp(8));
+            iv.setLayoutParams(lp);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            iv.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            Glide.with(this).load(Uri.parse(image)).into(iv);
+            gallery.addView(iv);
+        }
+    }
+
+    private void bindActions(Product p) {
+        Button contact = findViewById(R.id.btnContactSeller);
+        contact.setText(p.isWanted()
+                ? R.string.detail_contact_wanted : R.string.detail_contact_sale);
+        contact.setOnClickListener(v ->
+                open(new Intent(Intent.ACTION_VIEW, Uri.parse(p.getWhatsAppUrl()))));
+
+        Button call = findViewById(R.id.btnCallSeller);
+        call.setOnClickListener(v ->
+                open(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + p.getPhone()))));
+    }
+
+    private void open(Intent intent) {
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, R.string.detail_error_open, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }

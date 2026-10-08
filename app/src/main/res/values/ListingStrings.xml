@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Put this file in app/src/main/res/values/ . It sits beside your existing strings.xml,
+     so there is nothing to merge. Edit the location list to match your campus. -->
+<resources>
+
+    <!-- Screen -->
+    <string name="listing_screen_title_sale">Sell an item</string>
+    <string name="listing_screen_title_wanted">Request an item</string>
+    <string name="listing_type_sale">For sale</string>
+    <string name="listing_type_wanted">Wanted</string>
+
+    <!-- Photos -->
+    <string name="listing_photos_label">Photos</string>
+    <string name="listing_add_photos">Add photos</string>
+    <string name="listing_photo_count">%1$d / %2$d photos. Tap a photo to remove it.</string>
+    <string name="listing_photo_remove_hint">Listing photo. Tap to remove.</string>
+
+    <!-- Field hints -->
+    <string name="listing_hint_title_sale">Item name (e.g., Mini Fridge)</string>
+    <string name="listing_hint_title_wanted">What are you looking for?</string>
+    <string name="listing_hint_category">Category</string>
+    <string name="listing_hint_condition">Condition</string>
+    <string name="listing_hint_price_sale">Price</string>
+    <string name="listing_hint_price_wanted">Maximum budget</string>
+    <string name="listing_negotiable">Price is negotiable</string>
+    <string name="listing_hint_location">Pickup location</string>
+    <string name="listing_hint_description">Description (optional)</string>
+    <string name="listing_hint_phone">WhatsApp number</string>
+    <string name="listing_helper_phone">e.g., 0712 345 678</string>
+
+    <!-- Buttons -->
+    <string name="listing_submit_sale">Post listing</string>
+    <string name="listing_submit_wanted">Post request</string>
+
+    <!-- Validation errors -->
+    <string name="listing_error_title">Enter a name (at least 3 characters)</string>
+    <string name="listing_error_category">Choose a category</string>
+    <string name="listing_error_condition">Choose a condition</string>
+    <string name="listing_error_price">Enter an amount above 0</string>
+    <string name="listing_error_location">Choose a pickup location</string>
+    <string name="listing_error_phone">Enter a valid Kenyan number, e.g., 0712 345 678</string>
+    <string name="listing_error_photo">Add at least one photo of the item</string>
+
+    <!-- Confirm dialog -->
+    <string name="listing_confirm_title">Confirm details</string>
+    <string name="listing_confirm_post">Post</string>
+    <string name="listing_confirm_edit">Edit</string>
+    <string name="listing_label_item">Item</string>
+    <string name="listing_label_price">Price</string>
+    <string name="listing_label_budget">Budget</string>
+    <string name="listing_negotiable_short">negotiable</string>
+    <string name="listing_label_category">Category</string>
+    <string name="listing_label_condition">Condition</string>
+    <string name="listing_label_location">Location</string>
+    <string name="listing_label_whatsapp">WhatsApp</string>
+    <string name="listing_label_photos">Photos</string>
+
+    <!-- Discard dialog -->
+    <string name="listing_discard_title">Discard this post?</string>
+    <string name="listing_discard_message">What you have entered will be lost.</string>
+    <string name="listing_discard_confirm">Discard</string>
+    <string name="listing_discard_keep">Keep editing</string>
+
+    <!-- Feed and detail screens -->
+    <string name="product_wanted_badge">WANTED</string>
+    <string name="product_budget_format">Budget: %1$s</string>
+    <string name="detail_seller">Seller: JKUAT Student</string>
+    <string name="detail_price_negotiable">%1$s (negotiable)</string>
+    <string name="detail_category">Category: %1$s</string>
+    <string name="detail_condition">Condition: %1$s</string>
+    <string name="detail_location">Pickup: %1$s</string>
+    <string name="detail_posted">Posted %1$s</string>
+    <string name="detail_contact_sale">Chat on WhatsApp</string>
+    <string name="detail_contact_wanted">I have this item</string>
+    <string name="detail_call">Call</string>
+    <string name="detail_error_open">No app found to open this link</string>
+
+    <!-- Dropdown options -->
+    <string-array name="listing_categories">
+        <item>Books</item>
+        <item>Electronics</item>
+        <item>Utensils</item>
+        <item>Clothes</item>
+        <item>Furniture</item>
+        <item>Housing and rentals</item>
+        <item>Services</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="listing_conditions">
+        <item>New</item>
+        <item>Like new</item>
+        <item>Used - good</item>
+        <item>Used - fair</item>
+    </string-array>
+
+    <!-- Replace these with real spots on your campus -->
+    <string-array name="listing_locations">
+        <item>Main gate</item>
+        <item>Library</item>
+        <item>Cafeteria</item>
+        <item>Hostel area</item>
+        <item>Off campus (nearby)</item>
+        <item>Other</item>
+    </string-array>
+
+</resources>
