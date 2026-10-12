@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Put this file in app/src/main/res/values/ . It sits beside listing_strings.xml and strings.xml. -->
+<resources>
+
+    <!-- Sign in -->
+    <string name="auth_title">Welcome to CampusMarket</string>
+    <string name="auth_subtitle">Sign in with your student email</string>
+    <string name="auth_login">Log in</string>
+    <string name="auth_signup">Sign up</string>
+    <string name="auth_hint_email">Student email</string>
+    <string name="auth_hint_password">Password (6+ characters)</string>
+    <string name="auth_forgot">Forgot password?</string>
+    <string name="auth_resend">Resend verification email</string>
+    <string name="auth_error_email">Enter a valid email address</string>
+    <string name="auth_error_domain">Use your student email (ending in %1$s)</string>
+    <string name="auth_error_password">Password must be at least 6 characters</string>
+    <string name="auth_error_credentials">Wrong email or password</string>
+    <string name="auth_error_exists">An account with this email already exists. Log in instead.</string>
+    <string name="auth_error_network">No internet connection. Try again.</string>
+    <string name="auth_error_generic">Something went wrong: %1$s</string>
+    <string name="auth_verify_sent">We sent a verification link to %1$s. Open it, then log in.</string>
+    <string name="auth_not_verified">%1$s is not verified yet. Open the link we emailed you, then log in again.</string>
+    <string name="auth_resent">Verification email sent to %1$s</string>
+    <string name="auth_reset_sent">If an account exists for %1$s, a password reset link is on its way.</string>
+
+    <!-- Home -->
+    <string name="main_title">CampusMarket</string>
+    <string name="main_tagline">Buy and sell items on campus</string>
+    <string name="main_my_listings">My listings</string>
+    <string name="main_matches">Matches</string>
+    <string name="main_matches_count">Matches (%1$d)</string>
+    <string name="main_sign_out">Sign out</string>
+    <string name="main_search_hint">Search items…</string>
+    <string name="main_categories">Categories</string>
+    <string name="main_sell">Post an item / request</string>
+    <string name="main_recent">Recent listings</string>
+    <string name="main_empty">No items found.</string>
+    <string name="main_expiring">%1$d of your posts expire soon. Still available?</string>
+    <string name="main_review">Review</string>
+    <string name="main_load_error">Could not load listings: %1$s</string>
+
+    <!-- Posting -->
+    <string name="listing_uploading">Uploading photos %1$d/%2$d…</string>
+    <string name="listing_saving">Posting…</string>
+    <string name="listing_error_upload">Photo upload failed: %1$s</string>
+    <string name="listing_error_save">Could not post: %1$s</string>
+
+    <!-- My listings -->
+    <string name="my_title">My listings</string>
+    <string name="my_empty">You have not posted anything yet.</string>
+    <string name="my_status_sold">Sold</string>
+    <string name="my_status_found">Found</string>
+    <string name="my_status_expired">Expired. Still available? Renew to list it again.</string>
+    <string name="my_status_expiring">Expires in %1$d day(s). Still available?</string>
+    <string name="my_status_active">Active, %1$d days left</string>
+    <string name="my_mark_sold">Mark sold</string>
+    <string name="my_mark_found">Found it</string>
+    <string name="my_renew">Renew</string>
+    <string name="my_delete">Delete</string>
+    <string name="my_delete_title">Delete this post?</string>
+    <string name="my_delete_message">This cannot be undone.</string>
+    <string name="my_error">Something went wrong: %1$s</string>
+
+    <!-- Matches and notifications -->
+    <string name="matches_title">Matches</string>
+    <string name="matches_subtitle">Posts that fit what you are selling or looking for.</string>
+    <string name="matches_empty">No matches yet. Post a Wanted request or list an item, and we will tell you when something fits.</string>
+    <string name="notif_channel_name">Matches</string>
+    <string name="notif_title_wanted">Match for your request</string>
+    <string name="notif_title_sale">Someone wants what you are selling</string>
+    <string name="notif_text">%1$s, %2$s</string>
+
+</resources>

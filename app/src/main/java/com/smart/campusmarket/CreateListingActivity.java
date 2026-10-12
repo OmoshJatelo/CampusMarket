@@ -1,6 +1,5 @@
 package com.smart.campusmarket;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -28,6 +27,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
@@ -359,19 +360,69 @@ public class CreateListingActivity extends AppCompatActivity {
                 .setTitle(R.string.listing_confirm_title)
                 .setMessage(sb.toString())
                 .setCancelable(false)
-                .setPositiveButton(R.string.listing_confirm_post, (dialog, which) -> {
-                    btnSubmit.setEnabled(false);   // prevents double posting
-
-                    getSharedPreferences(PREFS, MODE_PRIVATE)
-                            .edit().putString(KEY_LAST_PHONE, p.getPhone()).apply();
-
-                    Intent result = new Intent();
-                    result.putExtra("new_product", p);
-                    setResult(RESULT_OK, result);
-                    finish();
-                })
+                .setPositiveButton(R.string.listing_confirm_post, (dialog, which) -> startUpload(p))
                 .setNegativeButton(R.string.listing_confirm_edit, (dialog, which) -> dialog.dismiss())
                 .show();
+    }
+
+    // ------------------------------------------------- upload photos, then save
+
+    private void startUpload(Product draft) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            finish();
+            return;
+        }
+        btnSubmit.setEnabled(false);   // prevents double posting
+        draft.setOwnerId(user.getUid());
+
+        if (selectedPhotos.isEmpty()) {
+            saveListing(draft);
+            return;
+        }
+
+        btnSubmit.setText(getString(R.string.listing_uploading, 0, selectedPhotos.size()));
+        CloudinaryUploader.uploadAll(this, new ArrayList<>(selectedPhotos),
+                new CloudinaryUploader.Callback() {
+                    @Override
+                    public void onProgress(int done, int total) {
+                        btnSubmit.setText(getString(R.string.listing_uploading, done, total));
+                    }
+
+                    @Override
+                    public void onSuccess(List<String> urls) {
+                        saveListing(draft.copyWithImages(urls));
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        failSubmit(getString(R.string.listing_error_upload, message));
+                    }
+                });
+    }
+
+    private void saveListing(Product product) {
+        btnSubmit.setText(R.string.listing_saving);
+        new ListingRepository().addListing(product, new ListingRepository.Done() {
+            @Override
+            public void onSuccess() {
+                getSharedPreferences(PREFS, MODE_PRIVATE)
+                        .edit().putString(KEY_LAST_PHONE, product.getPhone()).apply();
+                setResult(RESULT_OK);
+                finish();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                failSubmit(getString(R.string.listing_error_save, e.getMessage()));
+            }
+        });
+    }
+
+    private void failSubmit(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        btnSubmit.setEnabled(true);
+        applyListingType(isWanted);   // restores the button label
     }
 
     // ---------------------------------------------------------------- helpers

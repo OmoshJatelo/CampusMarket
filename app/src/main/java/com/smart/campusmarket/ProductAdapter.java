@@ -43,6 +43,14 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         }
     }
 
+    /** Replaces everything with a fresh list (from Firestore) and re-applies the search text. */
+    public void setProducts(List<Product> products) {
+        List<Product> copy = new ArrayList<>(products);
+        allProducts.clear();
+        allProducts.addAll(copy);
+        filter(query);
+    }
+
     /** Filters by title, category, location or description. Empty text shows everything. */
     public void filter(String text) {
         query = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
@@ -90,7 +98,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         holder.wantedBadge.setVisibility(product.isWanted() ? View.VISIBLE : View.GONE);
 
         Glide.with(holder.thumb)
-                .load(product.getFirstImageUri())   // null for posts without photos
+                .load(CloudinaryUploader.thumbnail(product.getFirstImageUri()))   // null = no photo
                 .placeholder(PLACEHOLDER)
                 .fallback(PLACEHOLDER)
                 .error(PLACEHOLDER)

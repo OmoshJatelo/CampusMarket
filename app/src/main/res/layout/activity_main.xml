@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,7 +17,7 @@
             android:id="@+id/appTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="CampusMarket"
+            android:text="@string/main_title"
             android:textSize="28sp"
             android:textStyle="bold" />
 
@@ -24,24 +25,69 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Buy and sell within your campus"
+            android:text="@string/main_tagline"
             android:textSize="14sp" />
 
-        <!-- Search Field -->
-        <EditText
-            android:id="@+id/searchInput"
+        <!-- Account shortcuts -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btnMyListings"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_my_listings" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btnMatches"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_matches" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btnSignOut"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_sign_out" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- Search (with search icon and a clear button) -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Search products..."
-            android:padding="12dp" />
+            android:hint="@string/main_search_hint"
+            app:endIconMode="clear_text"
+            app:startIconDrawable="@android:drawable/ic_menu_search">
 
-        <!-- Categories Section -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/searchInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Categories Section (same ids as before; tap to filter) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Categories"
+            android:layout_marginTop="20dp"
+            android:text="@string/main_categories"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -51,50 +97,56 @@
             android:layout_marginTop="8dp"
             android:scrollbars="none">
 
-            <LinearLayout
+            <com.google.android.material.chip.ChipGroup
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                app:singleLine="true">
 
-                <Button
+                <com.google.android.material.chip.Chip
                     android:id="@+id/btnBooks"
-                    style="@style/Widget.AppCompat.Button.Colored"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
                     android:text="Books" />
 
-                <Button
+                <com.google.android.material.chip.Chip
                     android:id="@+id/btnElectronics"
-                    style="@style/Widget.AppCompat.Button.Colored"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
                     android:text="Electronics" />
 
-                <Button
+                <com.google.android.material.chip.Chip
                     android:id="@+id/btnUtensils"
-                    style="@style/Widget.AppCompat.Button.Colored"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
                     android:text="Utensils" />
 
-                <Button
+                <com.google.android.material.chip.Chip
                     android:id="@+id/btnClothes"
-                    style="@style/Widget.AppCompat.Button.Colored"
+                    style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Clothes" />
-            </LinearLayout>
+            </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
+
+        <!-- Sell button moved up so it is always easy to reach -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSell"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:padding="12dp"
+            android:text="@string/main_sell" />
 
         <!-- Recent Listings Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Recent Listings"
+            android:text="@string/main_recent"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -105,16 +157,17 @@
             android:layout_marginTop="12dp"
             android:nestedScrollingEnabled="false" />
 
-
-        <!-- Sell Button -->
-        <Button
-            android:id="@+id/btnSell"
+        <!-- Shown when a search or category has no results -->
+        <TextView
+            android:id="@+id/textEmptyState"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"
-            android:padding="12dp"
-            android:text="+ Sell Item" />
+            android:layout_marginBottom="24dp"
+            android:gravity="center"
+            android:text="@string/main_empty"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
     </LinearLayout>
 </ScrollView>

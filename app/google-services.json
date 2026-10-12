@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "396100466331",
+    "project_id": "campumarket",
+    "storage_bucket": "campumarket.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396100466331:android:3753dff97c09387441f83e",
+        "android_client_info": {
+          "package_name": "com.smart.campusmarket"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHQWSIcQ7LTES7waUHrj7LzKUa-Pdny1A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

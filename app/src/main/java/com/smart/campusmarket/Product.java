@@ -9,15 +9,13 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * A marketplace post: either something FOR SALE or a WANTED request.
- *
- * - Price is stored as a number (so you can sort/filter later) and formatted only for display.
- * - createdAt is a timestamp; "2h ago" is calculated when displayed.
- * - The old 5-argument constructor is kept so your existing seed data in MainActivity still compiles.
+ * A marketplace post: something FOR SALE or a WANTED request.
+ * Stored in Firestore (see ListingRepository) and passed between screens as Serializable.
  */
 public class Product implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private static final long DAY_MS = 24L * 60L * 60L * 1000L;
 
     public static final String TYPE_SALE = "SALE";
     public static final String TYPE_WANTED = "WANTED";
@@ -38,15 +36,28 @@ public class Product implements Serializable {
     private final String phone;
     private final ArrayList<String> imageUris;
     private final long createdAt;
+    private final long expiresAt;
     private String status;
+    private String ownerId;
 
-    // Only used by the legacy constructor so hard-coded labels like "2h ago" still show.
+    // Only used by the legacy constructors so labels like "2h ago" still show.
     private String timeLabelOverride;
 
+    /** Creates a brand-new post (new id, now, expires in LISTING_DAYS). */
     public Product(String type, String title, long price, boolean negotiable,
                    String category, String condition, String location,
                    String description, String phone, List<String> imageUris) {
-        this.id = UUID.randomUUID().toString();
+        this(UUID.randomUUID().toString(), type, title, price, negotiable, category, condition,
+                location, description, phone, imageUris, System.currentTimeMillis(), 0L,
+                STATUS_ACTIVE, null);
+    }
+
+    /** Full constructor, used when rebuilding a post from Firestore. expiresAt <= 0 means default. */
+    public Product(String id, String type, String title, long price, boolean negotiable,
+                   String category, String condition, String location, String description,
+                   String phone, List<String> imageUris, long createdAt, long expiresAt,
+                   String status, String ownerId) {
+        this.id = id;
         this.type = type;
         this.title = title;
         this.price = price;
@@ -56,19 +67,21 @@ public class Product implements Serializable {
         this.location = location;
         this.description = description;
         this.phone = phone;
-        this.imageUris = new ArrayList<>(imageUris);
-        this.createdAt = System.currentTimeMillis();
-        this.status = STATUS_ACTIVE;
+        this.imageUris = imageUris == null ? new ArrayList<String>() : new ArrayList<String>(imageUris);
+        this.createdAt = createdAt;
+        this.expiresAt = expiresAt > 0 ? expiresAt : createdAt + AppConfig.LISTING_DAYS * DAY_MS;
+        this.status = status == null ? STATUS_ACTIVE : status;
+        this.ownerId = ownerId;
     }
 
-    /** Legacy constructor: keeps the seed data in MainActivity working unchanged. */
+    /** Legacy constructor kept so old code keeps compiling. */
     public Product(String title, String priceText, String location, String timeLabel, String phone) {
         this(TYPE_SALE, title, parsePrice(priceText), false, "", "", location, "", phone,
                 new ArrayList<String>());
         this.timeLabelOverride = timeLabel;
     }
 
-    /** Seed-data constructor that also sets a category (used by the category chips). */
+    /** Legacy constructor that also sets a category. */
     public Product(String title, String priceText, String category, String location,
                    String timeLabel, String phone) {
         this(TYPE_SALE, title, parsePrice(priceText), false, category, "", location, "", phone,
@@ -90,6 +103,32 @@ public class Product implements Serializable {
         }
     }
 
+    /** Same post, but with the uploaded photo links swapped in. */
+    public Product copyWithImages(List<String> urls) {
+        Product copy = new Product(id, type, title, price, negotiable, category, condition,
+                location, description, phone, urls, createdAt, expiresAt, status, ownerId);
+        copy.timeLabelOverride = timeLabelOverride;
+        return copy;
+    }
+
+    // ---------------------------------------------------------------- lifecycle
+
+    public boolean isExpired() {
+        return System.currentTimeMillis() > expiresAt;
+    }
+
+    /** Visible in the feed: not sold, not expired. */
+    public boolean isActive() {
+        return STATUS_ACTIVE.equals(status) && !isExpired();
+    }
+
+    /** Whole days left before expiry (0 if expired). */
+    public int daysLeft() {
+        long ms = expiresAt - System.currentTimeMillis();
+        if (ms <= 0) return 0;
+        return (int) ((ms + DAY_MS - 1) / DAY_MS);
+    }
+
     // ---------------------------------------------------------------- getters
 
     public String getId() { return id; }
@@ -103,7 +142,7 @@ public class Product implements Serializable {
     /** Raw numeric price in KSh (use this for sorting and filtering). */
     public long getPriceValue() { return price; }
 
-    /** Display price, e.g. "KSh 4,500". Keeps your adapter's getPrice() call working. */
+    /** Display price, e.g. "KSh 4,500". */
     public String getPrice() {
         return String.format(Locale.US, "KSh %,d", price);
     }
@@ -120,14 +159,20 @@ public class Product implements Serializable {
 
     public String getPhone() { return phone; }
 
-    /** Alias: your original Product exposed the number as getSellerPhone(). */
+    /** Alias: the original Product exposed the number as getSellerPhone(). */
     public String getSellerPhone() { return phone; }
 
     public String getStatus() { return status; }
 
     public void setStatus(String status) { this.status = status; }
 
+    public String getOwnerId() { return ownerId; }
+
+    public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+
     public long getCreatedAt() { return createdAt; }
+
+    public long getExpiresAt() { return expiresAt; }
 
     public List<String> getImageUris() { return imageUris; }
 
@@ -147,7 +192,6 @@ public class Product implements Serializable {
         return (hours / 24) + "d ago";
     }
 
-    /** Aliases so older adapter/detail code calling getTimePosted() or getTime() keeps working. */
     public String getTimePosted() { return getTimeAgo(); }
 
     public String getTime() { return getTimeAgo(); }
@@ -157,7 +201,7 @@ public class Product implements Serializable {
         String digits = phone == null ? "" : phone.replaceAll("[^0-9]", "");
         String message = isWanted()
                 ? "Hi, I saw your request for \"" + title + "\" on Campus Market. I may have one."
-                : "Hi, I saw your Listing of \"" + title + "\" on Campus Market. Is it still available?";
+                : "Hi, is \"" + title + "\" still available? (Campus Market)";
         return "https://wa.me/" + digits + "?text=" + Uri.encode(message);
     }
 }
