@@ -6,8 +6,8 @@ public final class AppConfig {
     private AppConfig() { }
 
     // ---- Cloudinary (free photo hosting). See the setup steps in the chat. ----
-    public static final String CLOUDINARY_CLOUD_NAME = "YOUR_CLOUD_NAME";
-    public static final String CLOUDINARY_UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
+    public static final String CLOUDINARY_CLOUD_NAME = "urf4pcg4";
+    public static final String CLOUDINARY_UPLOAD_PRESET = "campusMarket";
 
     /**
      * Only emails ending in this domain can sign up, e.g. "jkuat.ac.ke".
