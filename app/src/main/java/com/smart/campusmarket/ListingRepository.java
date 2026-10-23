@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * All Firestore access for posts lives here, so the screens never touch Firebase directly.
@@ -82,6 +83,13 @@ public class ListingRepository {
                 });
     }
 
+    /** One-off fetch of a user's own posts. */
+    public void fetchMine(String uid, Callback<List<Product>> cb) {
+        db.collection(COLLECTION).whereEqualTo("ownerId", uid).get()
+                .addOnSuccessListener(snap -> cb.onResult(toProducts(snap)))
+                .addOnFailureListener(cb::onError);
+    }
+
     // ----------------------------------------------------------------- writes
 
     public void addListing(Product p, Done cb) {
@@ -122,11 +130,20 @@ public class ListingRepository {
         return out;
     }
 
-    private static List<Product> toProducts(QuerySnapshot snap) {
+    static List<Product> toProducts(QuerySnapshot snap) {
         List<Product> out = new ArrayList<>();
         for (DocumentSnapshot d : snap.getDocuments()) {
             Product p = fromDoc(d);
             if (p != null) out.add(p);
+        }
+        return out;
+    }
+
+    /** Removes posts from blocked sellers. */
+    public static List<Product> excludeOwners(List<Product> posts, Set<String> blockedOwners) {
+        List<Product> out = new ArrayList<>();
+        for (Product p : posts) {
+            if (p.getOwnerId() == null || !blockedOwners.contains(p.getOwnerId())) out.add(p);
         }
         return out;
     }
@@ -147,7 +164,7 @@ public class ListingRepository {
         Boolean negotiable = d.getBoolean("negotiable");
         List<String> images = (List<String>) d.get("imageUris");
 
-        return new Product(
+        Product product = new Product(
                 d.getId(),
                 str(d, "type", Product.TYPE_SALE),
                 title,
@@ -163,6 +180,8 @@ public class ListingRepository {
                 expiresAt == null ? 0L : expiresAt,
                 d.getString("status"),
                 d.getString("ownerId"));
+        product.setBundleId(d.getString("bundleId"));
+        return product;
     }
 
     private static Map<String, Object> toMap(Product p) {
@@ -181,6 +200,7 @@ public class ListingRepository {
         m.put("expiresAt", p.getExpiresAt());
         m.put("status", p.getStatus());
         m.put("ownerId", p.getOwnerId());
+        if (p.getBundleId() != null) m.put("bundleId", p.getBundleId());
         return m;
     }
 }

@@ -1,6 +1,7 @@
 package com.smart.campusmarket;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,6 +61,8 @@ public class MyListingsActivity extends AppCompatActivity {
         });
 
         emptyText = findViewById(R.id.textMyEmpty);
+        findViewById(R.id.btnCreateBundle).setOnClickListener(v ->
+                startActivity(new Intent(this, CreateBundleActivity.class)));
         RecyclerView recycler = findViewById(R.id.recyclerMyListings);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new Adapter(posts, new Actions() {
@@ -73,6 +76,10 @@ public class MyListingsActivity extends AppCompatActivity {
 
             @Override public void delete(Product p) {
                 confirmDelete(p);
+            }
+
+            @Override public void share(Product p) {
+                ShareHelper.sharePost(MyListingsActivity.this, p);
             }
         });
         recycler.setAdapter(adapter);
@@ -135,6 +142,7 @@ public class MyListingsActivity extends AppCompatActivity {
         void markSold(Product p);
         void renew(Product p);
         void delete(Product p);
+        void share(Product p);
     }
 
     private static class Adapter extends RecyclerView.Adapter<Adapter.VH> {
@@ -194,6 +202,9 @@ public class MyListingsActivity extends AppCompatActivity {
             h.sold.setOnClickListener(v -> actions.markSold(p));
             h.renew.setOnClickListener(v -> actions.renew(p));
             h.delete.setOnClickListener(v -> actions.delete(p));
+
+            h.share.setVisibility(!sold && p.isActive() ? View.VISIBLE : View.GONE);
+            h.share.setOnClickListener(v -> actions.share(p));
         }
 
         @Override
@@ -204,7 +215,7 @@ public class MyListingsActivity extends AppCompatActivity {
         static class VH extends RecyclerView.ViewHolder {
             final ImageView thumb;
             final TextView title, price, status;
-            final MaterialButton sold, renew, delete;
+            final MaterialButton sold, renew, delete, share;
 
             VH(@NonNull View v) {
                 super(v);
@@ -215,6 +226,7 @@ public class MyListingsActivity extends AppCompatActivity {
                 sold = v.findViewById(R.id.btnMySold);
                 renew = v.findViewById(R.id.btnMyRenew);
                 delete = v.findViewById(R.id.btnMyDelete);
+                share = v.findViewById(R.id.btnMyShare);
             }
         }
     }

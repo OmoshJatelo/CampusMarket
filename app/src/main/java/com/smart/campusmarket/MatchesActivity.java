@@ -20,12 +20,17 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Shows other students' posts that fit the user's own posts:
  * sellers matching your Wanted requests, and buyers wanting what you sell.
+ * Posts from blocked sellers are left out.
  */
 public class MatchesActivity extends AppCompatActivity {
+
+    private final ListingRepository repository = new ListingRepository();
+    private final ModerationRepository moderation = new ModerationRepository();
 
     private ProductAdapter adapter;
     private TextView emptyText;
@@ -62,11 +67,27 @@ public class MatchesActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (uid == null) return;
-        new ListingRepository().fetchFeed(new ListingRepository.Callback<List<Product>>() {
+
+        moderation.fetchBlockedIds(uid, new ListingRepository.Callback<Set<String>>() {
+            @Override
+            public void onResult(Set<String> blocked) {
+                loadMatches(blocked);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                loadMatches(new java.util.HashSet<String>());   // show matches even if this fails
+            }
+        });
+    }
+
+    private void loadMatches(Set<String> blocked) {
+        repository.fetchFeed(new ListingRepository.Callback<List<Product>>() {
             @Override
             public void onResult(List<Product> all) {
-                List<MatchEngine.Match> matches =
-                        MatchEngine.findMatches(uid, ListingRepository.activeOnly(all));
+                List<Product> pool = ListingRepository.excludeOwners(
+                        ListingRepository.activeOnly(all), blocked);
+                List<MatchEngine.Match> matches = MatchEngine.findMatches(uid, pool);
 
                 // One card per matching post, even if it fits several of mine
                 Map<String, Product> unique = new LinkedHashMap<>();

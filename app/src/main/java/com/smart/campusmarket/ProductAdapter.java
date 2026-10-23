@@ -95,7 +95,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         // \u2022 is the bullet character (your original showed "?" because of an encoding issue)
         holder.locationTimeText.setText(
                 product.getLocation() + " \u2022 " + product.getTimePosted());
-        holder.wantedBadge.setVisibility(product.isWanted() ? View.VISIBLE : View.GONE);
+        if (product.isWanted()) {
+            holder.wantedBadge.setText(R.string.product_wanted_badge);
+            holder.wantedBadge.setVisibility(View.VISIBLE);
+        } else if (product.getBundleId() != null) {
+            holder.wantedBadge.setText(R.string.product_bundle_badge);
+            holder.wantedBadge.setVisibility(View.VISIBLE);
+        } else {
+            holder.wantedBadge.setVisibility(View.GONE);
+        }
 
         Glide.with(holder.thumb)
                 .load(CloudinaryUploader.thumbnail(product.getFirstImageUri()))   // null = no photo

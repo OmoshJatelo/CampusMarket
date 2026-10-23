@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Put this file in app/src/main/res/values/ . Sits beside strings.xml, listing_strings.xml and market_strings.xml. -->
+<resources>
+
+    <!-- Home -->
+    <string name="main_bundles">Move-out sales</string>
+    <string name="main_blocked">Blocked sellers</string>
+    <string name="product_bundle_badge">MOVE-OUT SALE</string>
+
+    <!-- Share -->
+    <string name="share_chooser">Share via</string>
+    <string name="share_sale">For sale: %1$s for %2$s</string>
+    <string name="share_wanted">Looking for: %1$s (budget %2$s)</string>
+    <string name="share_negotiable">(negotiable)</string>
+    <string name="share_pickup">Pickup: %1$s</string>
+    <string name="share_photo">Photo: %1$s</string>
+    <string name="share_footer">Posted on CampusMarket</string>
+    <string name="share_bundle_title">Move-out sale: %1$s</string>
+    <string name="share_bundle_item">- %1$s: %2$s</string>
+    <string name="share_bundle_more">+ %1$d more items</string>
+    <string name="share_bundle_total">%1$d items, %2$s in total</string>
+    <string name="share_bundle_pickup">Pickup: %1$s, %2$s</string>
+    <string name="detail_share">Share</string>
+    <string name="my_share">Share</string>
+
+    <!-- Report and block -->
+    <string name="detail_report">Report this post</string>
+    <string name="detail_block">Block this seller</string>
+    <string name="report_dialog_title">Why are you reporting this?</string>
+    <string name="report_sent">Thanks. We will review this post.</string>
+    <string name="report_error">Could not send the report. You may have reported this post already.</string>
+    <string name="block_title">Block this seller?</string>
+    <string name="block_message">You will no longer see their posts, move-out sales or matches. You can undo this under Blocked sellers.</string>
+    <string name="block_confirm">Block</string>
+    <string name="block_done">Seller blocked.</string>
+    <string name="block_error">Could not block: %1$s</string>
+    <string name="blocked_title">Blocked sellers</string>
+    <string name="blocked_empty">You have not blocked anyone.</string>
+    <string name="blocked_unblock">Unblock</string>
+    <string name="blocked_label">Seller of %1$s</string>
+    <string name="blocked_unblocked">Seller unblocked.</string>
+
+    <string-array name="report_reasons">
+        <item>Scam or fake listing</item>
+        <item>Prohibited or illegal item</item>
+        <item>Wrong price or details</item>
+        <item>Spam or duplicate</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Move-out bundles -->
+    <string name="my_create_bundle">Create move-out bundle</string>
+    <string name="bundle_create_title">New move-out bundle</string>
+    <string name="bundle_hint_title">Bundle name (e.g., Hall 6 room clearance)</string>
+    <string name="bundle_hint_location">Pickup location</string>
+    <string name="bundle_pick_date">Choose pickup date</string>
+    <string name="bundle_date_label">Pickup date: %1$s</string>
+    <string name="bundle_choose_items">Choose items</string>
+    <string name="bundle_items_selected">%1$d items selected</string>
+    <string name="bundle_items_dialog_title">Pick at least 2 items</string>
+    <string name="bundle_items_none">You have no unbundled items for sale. Post items first, then bundle them.</string>
+    <string name="bundle_hint_description">Notes for buyers (optional)</string>
+    <string name="bundle_hint_phone">WhatsApp number</string>
+    <string name="bundle_submit">Create bundle</string>
+    <string name="bundle_error_title">Enter a name (at least 3 characters)</string>
+    <string name="bundle_error_date">Choose a pickup date that has not passed</string>
+    <string name="bundle_error_items">Select at least 2 items</string>
+    <string name="bundle_created">Bundle created</string>
+    <string name="bundle_error_save">Could not create bundle: %1$s</string>
+
+    <string name="bundles_title">Move-out sales</string>
+    <string name="bundles_subtitle">Students clearing out their rooms. Collect several items in one trip.</string>
+    <string name="bundles_empty">No move-out sales right now.</string>
+    <string name="bundle_summary">%1$d items, pickup %2$s, %3$s</string>
+
+    <string name="bundle_detail_pickup">Pickup: %1$s, %2$s</string>
+    <string name="bundle_detail_total">%1$d items available, %2$s in total</string>
+    <string name="bundle_contact">Message seller on WhatsApp</string>
+    <string name="bundle_share">Share this sale</string>
+    <string name="bundle_close">Close bundle</string>
+    <string name="bundle_close_title">Close this bundle?</string>
+    <string name="bundle_close_message">Buyers will no longer see it. Your items stay posted individually.</string>
+    <string name="bundle_closed">Bundle closed</string>
+
+</resources>

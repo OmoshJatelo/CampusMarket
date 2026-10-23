@@ -55,6 +55,20 @@
                     android:text="@string/main_matches" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/btnBundles"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_bundles" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/btnBlocked"
+                    style="@style/Widget.Material3.Chip.Suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_blocked" />
+
+                <com.google.android.material.chip.Chip
                     android:id="@+id/btnSignOut"
                     style="@style/Widget.Material3.Chip.Suggestion"
                     android:layout_width="wrap_content"

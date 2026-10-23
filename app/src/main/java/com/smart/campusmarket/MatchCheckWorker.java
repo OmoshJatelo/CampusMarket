@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,8 +39,9 @@ public class MatchCheckWorker extends Worker {
 
         try {
             List<Product> all = ListingRepository.fetchFeedBlocking();
+            Set<String> blocked = ModerationRepository.fetchBlockedIdsBlocking(user.getUid());
             MatchNotifier.notifyNewMatches(getApplicationContext(), user.getUid(),
-                    ListingRepository.activeOnly(all));
+                    ListingRepository.excludeOwners(ListingRepository.activeOnly(all), blocked));
             return Result.success();
         } catch (Exception e) {
             return Result.retry();

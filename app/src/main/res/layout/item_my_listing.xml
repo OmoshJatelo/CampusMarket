@@ -53,33 +53,46 @@
         </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <!-- Scrolls sideways so four buttons fit on small screens -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:gravity="end"
-        android:orientation="horizontal">
+        android:scrollbars="none">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnMyRenew"
-            style="@style/Widget.Material3.Button.TextButton"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/my_renew" />
+            android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnMySold"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/my_mark_sold" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMyShare"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/my_share" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnMyDelete"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/my_delete" />
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMyRenew"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/my_renew" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMySold"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/my_mark_sold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMyDelete"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/my_delete" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
 </LinearLayout>

@@ -29,11 +29,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class MainActivity extends AppCompatActivity {
+public class                    MainActivity extends AppCompatActivity {
 
     private final ListingRepository repository = new ListingRepository();
+    private final ModerationRepository moderation = new ModerationRepository();
 
     private ProductAdapter adapter;
     private RecyclerView recyclerView;
@@ -42,7 +45,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView btnMatches;
 
     private ListenerRegistration feedListener;
+    private ListenerRegistration blockListener;
     private String uid;
+
+    private List<Product> latestFeed = new ArrayList<>();
+    private Set<String> blockedIds = new HashSet<>();
+    private boolean feedReady = false;
     private boolean loadedOnce = false;
     private boolean expiryWarningShown = false;
 
@@ -103,6 +111,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, MyListingsActivity.class)));
         btnMatches.setOnClickListener(v ->
                 startActivity(new Intent(this, MatchesActivity.class)));
+        findViewById(R.id.btnBundles).setOnClickListener(v ->
+                startActivity(new Intent(this, BundlesActivity.class)));
+        findViewById(R.id.btnBlocked).setOnClickListener(v ->
+                startActivity(new Intent(this, BlockedUsersActivity.class)));
         findViewById(R.id.btnSignOut).setOnClickListener(v -> signOut());
 
         askForNotificationPermission();
@@ -113,10 +125,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         if (uid == null) return;   // we were redirected to sign-in
+
+        blockListener = moderation.listenBlocked(uid,
+                new ListingRepository.Callback<List<ModerationRepository.BlockedUser>>() {
+                    @Override
+                    public void onResult(List<ModerationRepository.BlockedUser> list) {
+                        blockedIds = ModerationRepository.ids(list);
+                        renderFeed();
+                    }
+
+                    @Override
+                    public void onError(Exception e) { /* keep showing everything */ }
+                });
+
         feedListener = repository.listenFeed(new ListingRepository.Callback<List<Product>>() {
             @Override
             public void onResult(List<Product> all) {
-                onFeedLoaded(all);
+                latestFeed = all;
+                feedReady = true;
+                renderFeed();
             }
 
             @Override
@@ -130,16 +157,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (feedListener != null) {
-            feedListener.remove();
-            feedListener = null;
-        }
+        if (feedListener != null) feedListener.remove();
+        if (blockListener != null) blockListener.remove();
+        feedListener = null;
+        blockListener = null;
     }
 
     // ------------------------------------------------------------------ feed
 
-    private void onFeedLoaded(List<Product> all) {
-        List<Product> active = ListingRepository.activeOnly(all);
+    /** Active posts, minus anything from sellers the user has blocked. */
+    private void renderFeed() {
+        if (!feedReady) return;
+        List<Product> active = ListingRepository.excludeOwners(
+                ListingRepository.activeOnly(latestFeed), blockedIds);
         loadedOnce = true;
         adapter.setProducts(active);
 
@@ -148,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         int matchCount = MatchEngine.findMatches(uid, active).size();
         btnMatches.setText(getString(R.string.main_matches_count, matchCount));
 
-        warnAboutExpiringPosts(all);
+        warnAboutExpiringPosts(latestFeed);
     }
 
     private void warnAboutExpiringPosts(List<Product> all) {

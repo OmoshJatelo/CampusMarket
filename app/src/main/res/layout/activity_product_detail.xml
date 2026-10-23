@@ -123,5 +123,28 @@
             android:layout_marginTop="8dp"
             android:text="@string/detail_call" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShare"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/detail_share" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReport"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/detail_report" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBlock"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/detail_block" />
+
     </LinearLayout>
 </ScrollView>

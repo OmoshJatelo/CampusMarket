@@ -39,6 +39,7 @@ public class Product implements Serializable {
     private final long expiresAt;
     private String status;
     private String ownerId;
+    private String bundleId;   // set when the post belongs to a move-out bundle
 
     // Only used by the legacy constructors so labels like "2h ago" still show.
     private String timeLabelOverride;
@@ -108,6 +109,7 @@ public class Product implements Serializable {
         Product copy = new Product(id, type, title, price, negotiable, category, condition,
                 location, description, phone, urls, createdAt, expiresAt, status, ownerId);
         copy.timeLabelOverride = timeLabelOverride;
+        copy.bundleId = bundleId;
         return copy;
     }
 
@@ -169,6 +171,10 @@ public class Product implements Serializable {
     public String getOwnerId() { return ownerId; }
 
     public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
+
+    public String getBundleId() { return bundleId; }
+
+    public void setBundleId(String bundleId) { this.bundleId = bundleId; }
 
     public long getCreatedAt() { return createdAt; }
 
