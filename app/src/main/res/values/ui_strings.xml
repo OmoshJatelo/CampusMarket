@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Put this file in app/src/main/res/values/ -->
+<resources>
+    <string name="nav_home">Home</string>
+    <string name="nav_bundles">Move-out</string>
+    <string name="nav_matches">Matches</string>
+    <string name="nav_mine">My listings</string>
+    <string name="fab_sell">Sell</string>
+    <string name="main_more">More options</string>
+</resources>

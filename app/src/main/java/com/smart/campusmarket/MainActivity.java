@@ -5,10 +5,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,11 +22,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -33,7 +40,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class                    MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
+
+    private static final int GRID_COLUMNS = 2;
+    private static final long SPLASH_MIN_MS = 700;    // always show the logo briefly
+    private static final long SPLASH_MAX_MS = 3500;   // never make the user wait longer than this
 
     private final ListingRepository repository = new ListingRepository();
     private final ModerationRepository moderation = new ModerationRepository();
@@ -42,7 +53,8 @@ public class                    MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private EditText searchInput;
     private TextView emptyState;
-    private TextView btnMatches;
+    private View progressFeed;
+    private BottomNavigationView bottomNav;
 
     private ListenerRegistration feedListener;
     private ListenerRegistration blockListener;
@@ -53,13 +65,22 @@ public class                    MainActivity extends AppCompatActivity {
     private boolean feedReady = false;
     private boolean loadedOnce = false;
     private boolean expiryWarningShown = false;
+    private boolean splashTimedOut = false;
 
     private final ActivityResultLauncher<String> notificationPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> { });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Preloader: the splash stays up until the first listings load (or the time limit hits).
+        SplashScreen splash = SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
+        final long splashStart = SystemClock.uptimeMillis();
+        splash.setKeepOnScreenCondition(() ->
+                uid != null
+                        && (SystemClock.uptimeMillis() - splashStart < SPLASH_MIN_MS
+                        || (!feedReady && !splashTimedOut)));
+        new Handler(Looper.getMainLooper()).postDelayed(() -> splashTimedOut = true, SPLASH_MAX_MS);
 
         // Gate: only signed-in, email-verified students get past this point.
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -73,16 +94,17 @@ public class                    MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        // The bottom bar adds its own bottom inset, so only pad the top and sides here.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, 0);
             return insets;
         });
 
         recyclerView = findViewById(R.id.recyclerViewProducts);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new GridLayoutManager(this, GRID_COLUMNS));
         emptyState = findViewById(R.id.textEmptyState);
-        btnMatches = findViewById(R.id.btnMatches);
+        progressFeed = findViewById(R.id.progressFeed);
 
         adapter = new ProductAdapter(new ArrayList<>());
         recyclerView.setAdapter(adapter);
@@ -99,7 +121,7 @@ public class                    MainActivity extends AppCompatActivity {
             @Override public void afterTextChanged(Editable s) { adapter.filter(s.toString()); }
         });
 
-        // Category buttons: tap to filter, tap again to clear
+        // Category chips: tap to filter, tap again to clear
         setupCategoryButton(R.id.btnBooks, "Books");
         setupCategoryButton(R.id.btnElectronics, "Electronics");
         setupCategoryButton(R.id.btnUtensils, "Utensils");
@@ -107,15 +129,9 @@ public class                    MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btnSell).setOnClickListener(v ->
                 startActivity(new Intent(this, CreateListingActivity.class)));
-        findViewById(R.id.btnMyListings).setOnClickListener(v ->
-                startActivity(new Intent(this, MyListingsActivity.class)));
-        btnMatches.setOnClickListener(v ->
-                startActivity(new Intent(this, MatchesActivity.class)));
-        findViewById(R.id.btnBundles).setOnClickListener(v ->
-                startActivity(new Intent(this, BundlesActivity.class)));
-        findViewById(R.id.btnBlocked).setOnClickListener(v ->
-                startActivity(new Intent(this, BlockedUsersActivity.class)));
-        findViewById(R.id.btnSignOut).setOnClickListener(v -> signOut());
+        findViewById(R.id.btnMore).setOnClickListener(this::showOverflowMenu);
+
+        setupBottomNav();
 
         askForNotificationPermission();
         MatchCheckWorker.schedule(this);   // background match check (free, about every 15 min)
@@ -148,6 +164,7 @@ public class                    MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
+                progressFeed.setVisibility(View.GONE);
                 Toast.makeText(MainActivity.this,
                         getString(R.string.main_load_error, e.getMessage()), Toast.LENGTH_LONG).show();
             }
@@ -163,6 +180,48 @@ public class                    MainActivity extends AppCompatActivity {
         blockListener = null;
     }
 
+    // ------------------------------------------------------------ navigation
+
+    private void setupBottomNav() {
+        bottomNav = findViewById(R.id.bottomNav);
+        // Home is this screen. The other tabs open their own screens, and Home stays highlighted.
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.navBundles) {
+                startActivity(new Intent(this, BundlesActivity.class));
+                return false;
+            }
+            if (id == R.id.navMatches) {
+                startActivity(new Intent(this, MatchesActivity.class));
+                return false;
+            }
+            if (id == R.id.navMine) {
+                startActivity(new Intent(this, MyListingsActivity.class));
+                return false;
+            }
+            return true;
+        });
+        bottomNav.setOnItemReselectedListener(item -> recyclerView.smoothScrollToPosition(0));
+    }
+
+    private void showOverflowMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.main_overflow, popup.getMenu());
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.menuBlocked) {
+                startActivity(new Intent(this, BlockedUsersActivity.class));
+                return true;
+            }
+            if (id == R.id.menuSignOut) {
+                signOut();
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
     // ------------------------------------------------------------------ feed
 
     /** Active posts, minus anything from sellers the user has blocked. */
@@ -171,14 +230,24 @@ public class                    MainActivity extends AppCompatActivity {
         List<Product> active = ListingRepository.excludeOwners(
                 ListingRepository.activeOnly(latestFeed), blockedIds);
         loadedOnce = true;
+        progressFeed.setVisibility(View.GONE);
         adapter.setProducts(active);
 
         // Instant in-app matching (the background worker covers the app being closed)
         MatchNotifier.notifyNewMatches(this, uid, active);
-        int matchCount = MatchEngine.findMatches(uid, active).size();
-        btnMatches.setText(getString(R.string.main_matches_count, matchCount));
+        updateMatchesBadge(MatchEngine.findMatches(uid, active).size());
 
         warnAboutExpiringPosts(latestFeed);
+    }
+
+    private void updateMatchesBadge(int count) {
+        if (count > 0) {
+            BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.navMatches);
+            badge.setNumber(count);
+            badge.setVisible(true);
+        } else {
+            bottomNav.removeBadge(R.id.navMatches);
+        }
     }
 
     private void warnAboutExpiringPosts(List<Product> all) {
@@ -194,6 +263,7 @@ public class                    MainActivity extends AppCompatActivity {
         expiryWarningShown = true;
         Snackbar.make(findViewById(R.id.main), getString(R.string.main_expiring, expiring),
                         Snackbar.LENGTH_LONG)
+                .setAnchorView(bottomNav)
                 .setAction(R.string.main_review, v ->
                         startActivity(new Intent(this, MyListingsActivity.class)))
                 .show();

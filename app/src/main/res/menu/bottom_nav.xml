@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Save as app/src/main/res/menu/bottom_nav.xml (create the "menu" folder if it does not exist) -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navHome"
+        android:icon="@drawable/ic_nav_home"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/navBundles"
+        android:icon="@drawable/ic_nav_offer"
+        android:title="@string/nav_bundles" />
+    <item
+        android:id="@+id/navMatches"
+        android:icon="@drawable/ic_nav_swap"
+        android:title="@string/nav_matches" />
+    <item
+        android:id="@+id/navMine"
+        android:icon="@drawable/ic_nav_list"
+        android:title="@string/nav_mine" />
+</menu>

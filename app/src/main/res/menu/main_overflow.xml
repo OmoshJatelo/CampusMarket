@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Save as app/src/main/res/menu/main_overflow.xml -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuBlocked"
+        android:title="@string/main_blocked" />
+    <item
+        android:id="@+id/menuSignOut"
+        android:title="@string/main_sign_out" />
+</menu>

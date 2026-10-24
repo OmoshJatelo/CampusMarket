@@ -1,7 +1,12 @@
+<!-- Save this as app/src/main/res/values-night/themes.xml (replace the existing file). -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme (dark). -->
     <style name="Base.Theme.CampusMarket" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">#6FD9B8</item>
+        <item name="colorOnPrimary">#00382B</item>
+        <item name="colorPrimaryContainer">#005140</item>
+        <item name="colorOnPrimaryContainer">#8CF6D4</item>
+        <item name="colorSecondaryContainer">#34493F</item>
+        <item name="colorOnSecondaryContainer">#D1E9DD</item>
     </style>
 </resources>

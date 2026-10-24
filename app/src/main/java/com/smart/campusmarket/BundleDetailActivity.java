@@ -15,7 +15,7 @@ import androidx.core.content.IntentCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -68,7 +68,7 @@ public class BundleDetailActivity extends AppCompatActivity {
         totalText = findViewById(R.id.textBundleDetailTotal);
 
         RecyclerView recycler = findViewById(R.id.recyclerBundleItems);
-        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new ProductAdapter(new ArrayList<>());
         recycler.setAdapter(adapter);
 

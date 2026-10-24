@@ -1,9 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme (light). Brand colour: campus green. -->
     <style name="Base.Theme.CampusMarket" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">#0F7B5F</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#B8F0DC</item>
+        <item name="colorOnPrimaryContainer">#00201A</item>
+        <item name="colorSecondaryContainer">#D6E8E0</item>
+        <item name="colorOnSecondaryContainer">#0E1F19</item>
     </style>
 
     <style name="Theme.CampusMarket" parent="Base.Theme.CampusMarket" />
+
+    <!-- Preloader: shown while the app starts, then switches to Theme.CampusMarket. -->
+    <style name="Theme.CampusMarket.Splash" parent="Theme.SplashScreen">
+        <item name="postSplashScreenTheme">@style/Theme.CampusMarket</item>
+    </style>
 </resources>

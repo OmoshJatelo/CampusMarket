@@ -189,9 +189,9 @@ public class MyListingsActivity extends AppCompatActivity {
 
             Glide.with(h.thumb)
                     .load(CloudinaryUploader.thumbnail(p.getFirstImageUri()))
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .fallback(android.R.drawable.ic_menu_gallery)
-                    .error(android.R.drawable.ic_menu_gallery)
+                    .placeholder(R.drawable.ic_photo_placeholder)
+                    .fallback(R.drawable.ic_photo_placeholder)
+                    .error(R.drawable.ic_photo_placeholder)
                     .centerCrop()
                     .into(h.thumb);
 

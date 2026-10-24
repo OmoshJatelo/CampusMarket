@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -58,7 +58,7 @@ public class MatchesActivity extends AppCompatActivity {
 
         emptyText = findViewById(R.id.textMatchesEmpty);
         RecyclerView recycler = findViewById(R.id.recyclerMatches);
-        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new ProductAdapter(new ArrayList<>());
         recycler.setAdapter(adapter);
     }

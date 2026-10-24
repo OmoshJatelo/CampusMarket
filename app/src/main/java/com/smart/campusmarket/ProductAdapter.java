@@ -19,7 +19,7 @@ import java.util.Locale;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
-    private static final int PLACEHOLDER = android.R.drawable.ic_menu_gallery;
+    private static final int PLACEHOLDER = R.drawable.ic_photo_placeholder;
 
     /** Every post (the same list MainActivity created). */
     private final List<Product> allProducts;
