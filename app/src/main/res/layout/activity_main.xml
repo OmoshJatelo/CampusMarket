@@ -85,7 +85,7 @@
                         android:maxLines="1" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Category chips (same ids as before; tap to filter, tap again to clear) -->
+                <!-- Filters + category chips (tap a category to filter, tap again to clear) -->
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -96,6 +96,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:singleLine="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/btnFilters"
+                            style="@style/Widget.Material3.Chip.Assist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/main_filters"
+                            app:chipIcon="@drawable/ic_filter"
+                            app:chipIconVisible="true" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/btnBooks"
@@ -129,36 +138,65 @@
             </LinearLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- The feed now scrolls on its own (two photo columns) -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewProducts"
+        <!-- Pull down on the feed to refresh -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingStart="10dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="88dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/progressFeed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewProducts"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingStart="10dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="88dp" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <!-- Shown when a search or category has no results -->
-        <TextView
-            android:id="@+id/textEmptyState"
+        <!-- Friendly empty state, with a button that depends on why the feed is empty -->
+        <LinearLayout
+            android:id="@+id/emptyState"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
             android:padding="32dp"
-            android:text="@string/main_empty"
-            android:textSize="14sp"
-            android:visibility="gone" />
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_nav_offer"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:id="@+id/textEmptyTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textEmptyBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEmptyAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
 
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/btnSell"

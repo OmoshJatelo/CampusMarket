@@ -104,6 +104,13 @@ public class ListingRepository {
                 .addOnFailureListener(cb::onError);
     }
 
+    /** Puts a sold post back on the market (used by Undo). Keeps its original expiry. */
+    public void reopen(String id, Done cb) {
+        db.collection(COLLECTION).document(id).update("status", Product.STATUS_ACTIVE)
+                .addOnSuccessListener(v -> cb.onSuccess())
+                .addOnFailureListener(cb::onError);
+    }
+
     /** Relists a post for another LISTING_DAYS days. */
     public void renew(String id, Done cb) {
         long newExpiry = System.currentTimeMillis()

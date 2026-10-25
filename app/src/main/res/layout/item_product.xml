@@ -40,7 +40,7 @@
                 android:paddingBottom="3dp"
                 android:text="@string/product_wanted_badge"
                 android:textColor="#FFFFFF"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
         </FrameLayout>

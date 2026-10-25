@@ -2,6 +2,8 @@ package com.smart.campusmarket;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,11 +19,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -29,7 +33,10 @@ import com.google.firebase.firestore.ListenerRegistration;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The owner's view of their own posts: mark sold, renew ("still available?"), delete. */
+/**
+ * The owner's view of their own posts: mark sold, renew ("still available?"), delete, share.
+ * Swipe right to mark sold, swipe left to delete. Both can be undone from the message that appears.
+ */
 public class MyListingsActivity extends AppCompatActivity {
 
     private final ListingRepository repository = new ListingRepository();
@@ -37,6 +44,7 @@ public class MyListingsActivity extends AppCompatActivity {
 
     private Adapter adapter;
     private TextView emptyText;
+    private View emptyAction;
     private ListenerRegistration listener;
     private String uid;
 
@@ -61,28 +69,27 @@ public class MyListingsActivity extends AppCompatActivity {
         });
 
         emptyText = findViewById(R.id.textMyEmpty);
+        emptyAction = findViewById(R.id.btnMyEmptyPost);
+        emptyAction.setOnClickListener(v ->
+                startActivity(new Intent(this, CreateListingActivity.class)));
         findViewById(R.id.btnCreateBundle).setOnClickListener(v ->
                 startActivity(new Intent(this, CreateBundleActivity.class)));
+
         RecyclerView recycler = findViewById(R.id.recyclerMyListings);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new Adapter(posts, new Actions() {
-            @Override public void markSold(Product p) {
-                repository.markSold(p.getId(), doneHandler());
-            }
+            @Override public void markSold(Product p) { markSoldWithUndo(p); }
 
-            @Override public void renew(Product p) {
-                repository.renew(p.getId(), doneHandler());
-            }
+            @Override public void renew(Product p) { repository.renew(p.getId(), doneHandler()); }
 
-            @Override public void delete(Product p) {
-                confirmDelete(p);
-            }
+            @Override public void delete(Product p) { confirmDelete(p); }
 
             @Override public void share(Product p) {
                 ShareHelper.sharePost(MyListingsActivity.this, p);
             }
         });
         recycler.setAdapter(adapter);
+        attachSwipe(recycler);
     }
 
     @Override
@@ -95,7 +102,9 @@ public class MyListingsActivity extends AppCompatActivity {
                 posts.clear();
                 posts.addAll(value);
                 adapter.notifyDataSetChanged();
-                emptyText.setVisibility(posts.isEmpty() ? View.VISIBLE : View.GONE);
+                int empty = posts.isEmpty() ? View.VISIBLE : View.GONE;
+                emptyText.setVisibility(empty);
+                emptyAction.setVisibility(empty);
             }
 
             @Override
@@ -114,12 +123,52 @@ public class MyListingsActivity extends AppCompatActivity {
         }
     }
 
+    // ------------------------------------------------------- actions with undo
+
+    private void markSoldWithUndo(Product p) {
+        repository.markSold(p.getId(), new ListingRepository.Done() {
+            @Override
+            public void onSuccess() {
+                Snackbar.make(findViewById(R.id.myListingsMain),
+                                p.isWanted() ? R.string.my_marked_found : R.string.my_marked_sold,
+                                Snackbar.LENGTH_LONG)
+                        .setAction(R.string.action_undo, v ->
+                                repository.reopen(p.getId(), doneHandler()))
+                        .show();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                showError(e);
+            }
+        });
+    }
+
+    private void deleteWithUndo(Product p) {
+        repository.delete(p.getId(), new ListingRepository.Done() {
+            @Override
+            public void onSuccess() {
+                Snackbar bar = Snackbar.make(findViewById(R.id.myListingsMain),
+                        R.string.my_deleted, Snackbar.LENGTH_LONG);
+                // Only an active post can be put back (the posting rules require an active status)
+                if (Product.STATUS_ACTIVE.equals(p.getStatus())) {
+                    bar.setAction(R.string.action_undo, v -> repository.addListing(p, doneHandler()));
+                }
+                bar.show();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                showError(e);
+            }
+        });
+    }
+
     private void confirmDelete(Product p) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.my_delete_title)
                 .setMessage(R.string.my_delete_message)
-                .setPositiveButton(R.string.my_delete, (d, w) ->
-                        repository.delete(p.getId(), doneHandler()))
+                .setPositiveButton(R.string.my_delete, (d, w) -> deleteWithUndo(p))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
@@ -134,6 +183,54 @@ public class MyListingsActivity extends AppCompatActivity {
 
     private void showError(Exception e) {
         Toast.makeText(this, getString(R.string.my_error, e.getMessage()), Toast.LENGTH_LONG).show();
+    }
+
+    // ------------------------------------------------------------------ swipe
+
+    private void attachSwipe(RecyclerView recycler) {
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int direction) {
+                int position = vh.getAdapterPosition();
+                if (position == RecyclerView.NO_POSITION || position >= posts.size()) return;
+                Product p = posts.get(position);
+
+                adapter.notifyItemChanged(position);   // slide the row back; the live list updates after
+
+                if (direction == ItemTouchHelper.RIGHT) {
+                    if (!Product.STATUS_SOLD.equals(p.getStatus())) markSoldWithUndo(p);
+                } else {
+                    deleteWithUndo(p);
+                }
+            }
+
+            @Override
+            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView rv,
+                                    @NonNull RecyclerView.ViewHolder vh, float dX, float dY,
+                                    int actionState, boolean isCurrentlyActive) {
+                View row = vh.itemView;
+                if (dX != 0) {
+                    ColorDrawable background = new ColorDrawable(dX > 0 ? 0xFF2E7D32 : 0xFFC62828);
+                    if (dX > 0) {
+                        background.setBounds(row.getLeft(), row.getTop(),
+                                row.getLeft() + (int) dX, row.getBottom());
+                    } else {
+                        background.setBounds(row.getRight() + (int) dX, row.getTop(),
+                                row.getRight(), row.getBottom());
+                    }
+                    background.draw(c);
+                }
+                super.onChildDraw(c, rv, vh, dX, dY, actionState, isCurrentlyActive);
+            }
+        }).attachToRecyclerView(recycler);
     }
 
     // ---------------------------------------------------------------- adapter

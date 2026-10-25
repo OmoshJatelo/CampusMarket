@@ -2,6 +2,7 @@ package com.smart.campusmarket;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,6 +28,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -43,6 +45,7 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     private static final int GRID_COLUMNS = 2;
+    private static final int SKELETON_CARDS = 6;
     private static final long SPLASH_MIN_MS = 700;    // always show the logo briefly
     private static final long SPLASH_MAX_MS = 3500;   // never make the user wait longer than this
 
@@ -51,9 +54,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ProductAdapter adapter;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefresh;
     private EditText searchInput;
-    private TextView emptyState;
-    private View progressFeed;
+    private TextView btnFilters;
+    private View emptyGroup;
+    private TextView emptyTitle, emptyBody;
+    private TextView emptyAction;
     private BottomNavigationView bottomNav;
 
     private ListenerRegistration feedListener;
@@ -62,7 +68,9 @@ public class MainActivity extends AppCompatActivity {
 
     private List<Product> latestFeed = new ArrayList<>();
     private Set<String> blockedIds = new HashSet<>();
-    private boolean feedReady = false;
+    private FeedFilter feedFilter = new FeedFilter();
+    private boolean feedReady = false;     // first data (or first error) has arrived
+    private boolean feedShown = false;     // the real list has replaced the loading placeholders
     private boolean loadedOnce = false;
     private boolean expiryWarningShown = false;
     private boolean splashTimedOut = false;
@@ -82,10 +90,18 @@ public class MainActivity extends AppCompatActivity {
                         || (!feedReady && !splashTimedOut)));
         new Handler(Looper.getMainLooper()).postDelayed(() -> splashTimedOut = true, SPLASH_MAX_MS);
 
-        // Gate: only signed-in, email-verified students get past this point.
+        // Gate 1: only signed-in, email-verified students get past this point.
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null || !user.isEmailVerified()) {
             startActivity(new Intent(this, AuthActivity.class));
+            finish();
+            return;
+        }
+
+        // Gate 2: first time on this phone, show the short introduction.
+        SharedPreferences prefs = getSharedPreferences(OnboardingActivity.PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean(OnboardingActivity.KEY_DONE, false)) {
+            startActivity(new Intent(this, OnboardingActivity.class));
             finish();
             return;
         }
@@ -103,22 +119,32 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerViewProducts);
         recyclerView.setLayoutManager(new GridLayoutManager(this, GRID_COLUMNS));
-        emptyState = findViewById(R.id.textEmptyState);
-        progressFeed = findViewById(R.id.progressFeed);
+        recyclerView.setAdapter(new SkeletonAdapter(SKELETON_CARDS));   // grey placeholders while loading
 
         adapter = new ProductAdapter(new ArrayList<>());
-        recyclerView.setAdapter(adapter);
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override public void onChanged() { updateEmptyState(); }
             @Override public void onItemRangeInserted(int start, int count) { updateEmptyState(); }
             @Override public void onItemRangeRemoved(int start, int count) { updateEmptyState(); }
         });
 
+        swipeRefresh = findViewById(R.id.swipeRefresh);
+        swipeRefresh.setOnRefreshListener(this::refreshFeed);
+
+        emptyGroup = findViewById(R.id.emptyState);
+        emptyTitle = findViewById(R.id.textEmptyTitle);
+        emptyBody = findViewById(R.id.textEmptyBody);
+        emptyAction = findViewById(R.id.btnEmptyAction);
+        emptyAction.setOnClickListener(v -> onEmptyActionClicked());
+
         searchInput = findViewById(R.id.searchInput);
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
-            @Override public void afterTextChanged(Editable s) { adapter.filter(s.toString()); }
+            @Override public void afterTextChanged(Editable s) {
+                adapter.filter(s.toString());
+                updateEmptyState();
+            }
         });
 
         // Category chips: tap to filter, tap again to clear
@@ -126,6 +152,14 @@ public class MainActivity extends AppCompatActivity {
         setupCategoryButton(R.id.btnElectronics, "Electronics");
         setupCategoryButton(R.id.btnUtensils, "Utensils");
         setupCategoryButton(R.id.btnClothes, "Clothes");
+
+        btnFilters = findViewById(R.id.btnFilters);
+        btnFilters.setOnClickListener(v -> FilterSheet.show(this, feedFilter, newFilter -> {
+            feedFilter = newFilter;
+            adapter.setFilter(feedFilter);
+            updateFilterChip();
+            updateEmptyState();
+        }));
 
         findViewById(R.id.btnSell).setOnClickListener(v ->
                 startActivity(new Intent(this, CreateListingActivity.class)));
@@ -140,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (uid == null) return;   // we were redirected to sign-in
+        if (uid == null) return;   // we were redirected to sign-in or the introduction
 
         blockListener = moderation.listenBlocked(uid,
                 new ListingRepository.Callback<List<ModerationRepository.BlockedUser>>() {
@@ -164,7 +198,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(Exception e) {
-                progressFeed.setVisibility(View.GONE);
+                feedReady = true;
+                loadedOnce = true;
+                showFeedIfNeeded();
+                updateEmptyState();
                 Toast.makeText(MainActivity.this,
                         getString(R.string.main_load_error, e.getMessage()), Toast.LENGTH_LONG).show();
             }
@@ -224,20 +261,50 @@ public class MainActivity extends AppCompatActivity {
 
     // ------------------------------------------------------------------ feed
 
+    /** Pull-to-refresh: fetch the newest posts straight away. */
+    private void refreshFeed() {
+        repository.fetchFeed(new ListingRepository.Callback<List<Product>>() {
+            @Override
+            public void onResult(List<Product> all) {
+                latestFeed = all;
+                feedReady = true;
+                renderFeed();
+                swipeRefresh.setRefreshing(false);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(MainActivity.this,
+                        getString(R.string.main_load_error, e.getMessage()), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     /** Active posts, minus anything from sellers the user has blocked. */
     private void renderFeed() {
         if (!feedReady) return;
         List<Product> active = ListingRepository.excludeOwners(
                 ListingRepository.activeOnly(latestFeed), blockedIds);
         loadedOnce = true;
-        progressFeed.setVisibility(View.GONE);
         adapter.setProducts(active);
+        showFeedIfNeeded();
+        updateEmptyState();
 
         // Instant in-app matching (the background worker covers the app being closed)
         MatchNotifier.notifyNewMatches(this, uid, active);
         updateMatchesBadge(MatchEngine.findMatches(uid, active).size());
 
         warnAboutExpiringPosts(latestFeed);
+    }
+
+    /** Swaps the grey placeholders for the real list, with a short fade. */
+    private void showFeedIfNeeded() {
+        if (feedShown) return;
+        feedShown = true;
+        recyclerView.setAdapter(adapter);
+        recyclerView.setAlpha(0f);
+        recyclerView.animate().alpha(1f).setDuration(250).start();
     }
 
     private void updateMatchesBadge(int count) {
@@ -269,9 +336,40 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    // ------------------------------------------------------------ empty state
+
+    private boolean hasSearchOrFilter() {
+        return !searchInput.getText().toString().trim().isEmpty() || feedFilter.activeCount() > 0;
+    }
+
     private void updateEmptyState() {
         if (!loadedOnce) return;
-        emptyState.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+        boolean empty = adapter.getItemCount() == 0;
+        emptyGroup.setVisibility(empty ? View.VISIBLE : View.GONE);
+        if (!empty) return;
+
+        boolean narrowed = hasSearchOrFilter();
+        emptyTitle.setText(narrowed ? R.string.empty_search_title : R.string.empty_none_title);
+        emptyBody.setText(narrowed ? R.string.empty_search_body : R.string.empty_none_body);
+        emptyAction.setText(narrowed ? R.string.empty_search_action : R.string.empty_none_action);
+    }
+
+    private void onEmptyActionClicked() {
+        if (hasSearchOrFilter()) {
+            searchInput.setText("");
+            feedFilter = new FeedFilter();
+            adapter.setFilter(feedFilter);
+            updateFilterChip();
+            updateEmptyState();
+        } else {
+            startActivity(new Intent(this, CreateListingActivity.class));
+        }
+    }
+
+    private void updateFilterChip() {
+        int count = feedFilter.activeCount();
+        btnFilters.setText(count > 0
+                ? getString(R.string.main_filters_count, count) : getString(R.string.main_filters));
     }
 
     // ---------------------------------------------------------------- actions

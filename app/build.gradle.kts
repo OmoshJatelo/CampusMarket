@@ -48,4 +48,6 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.viewpager2)
+    implementation(libs.androidx.swiperefreshlayout)
 }

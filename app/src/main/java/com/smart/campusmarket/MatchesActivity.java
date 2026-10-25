@@ -34,6 +34,7 @@ public class MatchesActivity extends AppCompatActivity {
 
     private ProductAdapter adapter;
     private TextView emptyText;
+    private View emptyAction;
     private String uid;
 
     @Override
@@ -57,6 +58,9 @@ public class MatchesActivity extends AppCompatActivity {
         });
 
         emptyText = findViewById(R.id.textMatchesEmpty);
+        emptyAction = findViewById(R.id.btnMatchesEmptyPost);
+        emptyAction.setOnClickListener(v ->
+                startActivity(new android.content.Intent(this, CreateListingActivity.class)));
         RecyclerView recycler = findViewById(R.id.recyclerMatches);
         recycler.setLayoutManager(new GridLayoutManager(this, 2));
         adapter = new ProductAdapter(new ArrayList<>());
@@ -95,6 +99,7 @@ public class MatchesActivity extends AppCompatActivity {
 
                 adapter.setProducts(new ArrayList<>(unique.values()));
                 emptyText.setVisibility(unique.isEmpty() ? View.VISIBLE : View.GONE);
+                emptyAction.setVisibility(unique.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override

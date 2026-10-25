@@ -9,59 +9,94 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
+/**
+ * Shows posts as cards. Applies the search text, the filters and the sort order, and animates
+ * posts in and out when the list changes.
+ */
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
     private static final int PLACEHOLDER = R.drawable.ic_photo_placeholder;
 
-    /** Every post (the same list MainActivity created). */
-    private final List<Product> allProducts;
-    /** What is currently shown after applying the search text. */
-    private final List<Product> visibleProducts = new ArrayList<>();
+    /** Every post (before search and filters). */
+    private final List<Product> allProducts = new ArrayList<>();
+    /** What is currently shown. */
+    private List<Product> visibleProducts = new ArrayList<>();
     private String query = "";
+    private FeedFilter filter = new FeedFilter();
 
     public ProductAdapter(List<Product> productList) {
-        this.allProducts = productList;
-        this.visibleProducts.addAll(productList);
+        allProducts.addAll(productList);
+        rebuild();
     }
 
     // -------------------------------------------------------- public actions
 
-    /** Adds a new post at the top (use this instead of editing the list directly). */
-    public void addProduct(Product product) {
-        allProducts.add(0, product);
-        if (matches(product, query)) {
-            visibleProducts.add(0, product);
-            notifyItemInserted(0);
-        }
-    }
-
-    /** Replaces everything with a fresh list (from Firestore) and re-applies the search text. */
+    /** Replaces everything with a fresh list (from Firestore) and re-applies search and filters. */
     public void setProducts(List<Product> products) {
         List<Product> copy = new ArrayList<>(products);
         allProducts.clear();
         allProducts.addAll(copy);
-        filter(query);
+        rebuild();
+    }
+
+    /** Adds a new post at the top. */
+    public void addProduct(Product product) {
+        allProducts.add(0, product);
+        rebuild();
     }
 
     /** Filters by title, category, location or description. Empty text shows everything. */
     public void filter(String text) {
         query = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
-        visibleProducts.clear();
-        for (Product p : allProducts) {
-            if (matches(p, query)) visibleProducts.add(p);
-        }
-        notifyDataSetChanged();
+        rebuild();
     }
 
-    private boolean matches(Product p, String q) {
+    /** Applies the filter sheet's choices (price range, condition, type, sort order). */
+    public void setFilter(FeedFilter newFilter) {
+        filter = newFilter.copy();
+        rebuild();
+    }
+
+    // ------------------------------------------------------------ list logic
+
+    private void rebuild() {
+        List<Product> next = new ArrayList<>();
+        for (Product p : allProducts) {
+            if (matchesQuery(p, query) && filter.matches(p)) next.add(p);
+        }
+        sort(next);
+
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new Diff(visibleProducts, next));
+        visibleProducts = next;
+        diff.dispatchUpdatesTo(this);   // animates inserts, removals and moves
+    }
+
+    private void sort(List<Product> list) {
+        switch (filter.sort) {
+            case PRICE_LOW:
+                Collections.sort(list, (a, b) -> Long.compare(a.getPriceValue(), b.getPriceValue()));
+                break;
+            case PRICE_HIGH:
+                Collections.sort(list, (a, b) -> Long.compare(b.getPriceValue(), a.getPriceValue()));
+                break;
+            default:
+                Collections.sort(list, (a, b) -> Long.compare(b.getCreatedAt(), a.getCreatedAt()));
+                break;
+        }
+    }
+
+    private boolean matchesQuery(Product p, String q) {
         if (q.isEmpty()) return true;
         return contains(p.getTitle(), q)
                 || contains(p.getCategory(), q)
@@ -71,6 +106,38 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
     private boolean contains(String field, String q) {
         return field != null && field.toLowerCase(Locale.ROOT).contains(q);
+    }
+
+    private static class Diff extends DiffUtil.Callback {
+        private final List<Product> oldList;
+        private final List<Product> newList;
+
+        Diff(List<Product> oldList, List<Product> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override public int getOldListSize() { return oldList.size(); }
+
+        @Override public int getNewListSize() { return newList.size(); }
+
+        @Override
+        public boolean areItemsTheSame(int o, int n) {
+            return Objects.equals(oldList.get(o).getId(), newList.get(n).getId());
+        }
+
+        @Override
+        public boolean areContentsTheSame(int o, int n) {
+            Product a = oldList.get(o);
+            Product b = newList.get(n);
+            return Objects.equals(a.getTitle(), b.getTitle())
+                    && a.getPriceValue() == b.getPriceValue()
+                    && Objects.equals(a.getStatus(), b.getStatus())
+                    && Objects.equals(a.getBundleId(), b.getBundleId())
+                    && Objects.equals(a.getFirstImageUri(), b.getFirstImageUri())
+                    && Objects.equals(a.getLocation(), b.getLocation())
+                    && Objects.equals(a.getTimeAgo(), b.getTimeAgo());
+        }
     }
 
     // ---------------------------------------------------------- RecyclerView
@@ -92,9 +159,9 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         holder.priceText.setText(product.isWanted()
                 ? context.getString(R.string.product_budget_format, product.getPrice())
                 : product.getPrice());
-        // \u2022 is the bullet character (your original showed "?" because of an encoding issue)
         holder.locationTimeText.setText(
                 product.getLocation() + " \u2022 " + product.getTimePosted());
+
         if (product.isWanted()) {
             holder.wantedBadge.setText(R.string.product_wanted_badge);
             holder.wantedBadge.setVisibility(View.VISIBLE);

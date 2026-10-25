@@ -5,25 +5,29 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.IntentCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDetailActivity extends AppCompatActivity {
@@ -53,6 +57,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         bindExtras(product);
     }
 
+    // ---------------------------------------------------------------- details
+
     private void bindDetails(Product p) {
         ((TextView) findViewById(R.id.detailTitle)).setText(p.getTitle());
 
@@ -66,7 +72,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         findViewById(R.id.detailWantedBadge)
                 .setVisibility(p.isWanted() ? View.VISIBLE : View.GONE);
 
-        // Older seed posts have no category/condition/description, so hide empty rows.
+        // Older posts have no category/condition/description, so hide empty rows.
         setOptionalText(R.id.detailCategory, p.getCategory(), R.string.detail_category);
         if (!p.isWanted()) {
             setOptionalText(R.id.detailCondition, p.getCondition(), R.string.detail_condition);
@@ -95,29 +101,88 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void bindGallery(Product p) {
-        HorizontalScrollView scroll = findViewById(R.id.detailGalleryScroll);
-        LinearLayout gallery = findViewById(R.id.detailGallery);
-        List<String> images = p.getImageUris();
+    // ---------------------------------------------------------------- gallery
 
+    private void bindGallery(Product p) {
+        View box = findViewById(R.id.detailGalleryBox);
+        List<String> images = p.getImageUris();
         if (images.isEmpty()) {
-            scroll.setVisibility(View.GONE);
+            box.setVisibility(View.GONE);
             return;
         }
 
-        int width = dp(260);
-        int height = dp(220);
-        for (String image : images) {
-            ImageView iv = new ImageView(this);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(width, height);
-            lp.setMarginEnd(dp(8));
-            iv.setLayoutParams(lp);
-            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            iv.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            Glide.with(this).load(Uri.parse(image)).into(iv);
-            gallery.addView(iv);
+        ViewPager2 pager = findViewById(R.id.detailPager);
+        LinearLayout dots = findViewById(R.id.detailDots);
+
+        pager.setAdapter(new GalleryAdapter(images, position -> openViewer(images, position)));
+        Dots.setup(dots, images.size());
+        pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                Dots.select(dots, position);
+            }
+        });
+    }
+
+    private void openViewer(List<String> images, int position) {
+        Intent intent = new Intent(this, ImageViewerActivity.class);
+        intent.putStringArrayListExtra(ImageViewerActivity.EXTRA_IMAGES, new ArrayList<>(images));
+        intent.putExtra(ImageViewerActivity.EXTRA_INDEX, position);
+        startActivity(intent);
+    }
+
+    private interface OnPhotoClick {
+        void onClick(int position);
+    }
+
+    private static class GalleryAdapter extends RecyclerView.Adapter<GalleryAdapter.VH> {
+
+        private final List<String> urls;
+        private final OnPhotoClick onClick;
+
+        GalleryAdapter(List<String> urls, OnPhotoClick onClick) {
+            this.urls = urls;
+            this.onClick = onClick;
+        }
+
+        @NonNull
+        @Override
+        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            ImageView view = new ImageView(parent.getContext());
+            view.setLayoutParams(new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            return new VH(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull VH h, int position) {
+            h.image.setContentDescription(h.image.getContext().getString(
+                    R.string.detail_photo_desc, position + 1, urls.size()));
+            Glide.with(h.image)
+                    .load(urls.get(position))
+                    .placeholder(R.drawable.ic_photo_placeholder)
+                    .error(R.drawable.ic_photo_placeholder)
+                    .into(h.image);
+            h.image.setOnClickListener(v -> onClick.onClick(h.getAdapterPosition()));
+        }
+
+        @Override
+        public int getItemCount() {
+            return urls.size();
+        }
+
+        static class VH extends RecyclerView.ViewHolder {
+            final ImageView image;
+
+            VH(@NonNull ImageView v) {
+                super(v);
+                image = v;
+            }
         }
     }
+
+    // ---------------------------------------------------------------- contact
 
     private void bindActions(Product p) {
         Button contact = findViewById(R.id.btnContactSeller);
@@ -204,9 +269,5 @@ public class ProductDetailActivity extends AppCompatActivity {
                                 }))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }

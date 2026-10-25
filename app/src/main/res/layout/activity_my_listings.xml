@@ -13,6 +13,13 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/my_hint"
+        android:textSize="13sp" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCreateBundle"
         style="?attr/materialButtonOutlinedStyle"
@@ -29,6 +36,15 @@
         android:gravity="center"
         android:text="@string/my_empty"
         android:textSize="14sp"
+        android:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMyEmptyPost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:text="@string/my_empty_action"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView

@@ -14,7 +14,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="Campus Market"
+        android:label="CampusMarket"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CampusMarket">
@@ -60,6 +60,13 @@
             android:exported="false" />
         <activity
             android:name=".BlockedUsersActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ImageViewerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OnboardingActivity"
             android:exported="false" />
 
     </application>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Put this file in app/src/main/res/values/ -->
+<resources>
+
+    <!-- Filters and sorting -->
+    <string name="main_filters">Filters</string>
+    <string name="main_filters_count">Filters (%1$d)</string>
+    <string name="filters_title">Filters and sorting</string>
+    <string name="filters_sort">Sort by</string>
+    <string name="sort_newest">Newest</string>
+    <string name="sort_price_low">Price: low to high</string>
+    <string name="sort_price_high">Price: high to low</string>
+    <string name="filters_price">Price range (KSh)</string>
+    <string name="filters_min">Min</string>
+    <string name="filters_max">Max</string>
+    <string name="filters_condition">Condition</string>
+    <string name="filters_type">Show</string>
+    <string name="type_all">Everything</string>
+    <string name="type_sale">For sale</string>
+    <string name="type_wanted">Wanted requests</string>
+    <string name="filters_reset">Reset</string>
+    <string name="filters_apply">Apply</string>
+
+    <!-- Empty states -->
+    <string name="empty_none_title">No listings yet</string>
+    <string name="empty_none_body">Be the first to post something for sale, or ask for what you need.</string>
+    <string name="empty_none_action">Post an item</string>
+    <string name="empty_search_title">Nothing matches your search</string>
+    <string name="empty_search_body">Try different words, or clear the search and filters.</string>
+    <string name="empty_search_action">Clear search and filters</string>
+    <string name="my_empty_action">Post an item</string>
+    <string name="matches_empty_action">Post a Wanted request</string>
+    <string name="bundles_empty_action">Create a move-out sale</string>
+
+    <!-- Undo and swipe -->
+    <string name="action_undo">Undo</string>
+    <string name="my_marked_sold">Marked as sold</string>
+    <string name="my_marked_found">Marked as found</string>
+    <string name="my_deleted">Post deleted</string>
+    <string name="my_hint">Swipe right to mark sold, left to delete</string>
+
+    <!-- Photos -->
+    <string name="detail_photo_desc">Photo %1$d of %2$d. Tap to enlarge.</string>
+    <string name="viewer_counter">%1$d / %2$d</string>
+    <string name="viewer_close">Close photo viewer</string>
+    <string name="viewer_photo_desc">Photo %1$d of %2$d. Pinch to zoom.</string>
+
+    <!-- First-run introduction -->
+    <string name="onb_title_1">Buy and sell on campus</string>
+    <string name="onb_body_1">Find second-hand items from verified students, or post what you want to sell.</string>
+    <string name="onb_title_2">Tell us what you need</string>
+    <string name="onb_body_2">Post a Wanted request and we will alert you when a matching item appears.</string>
+    <string name="onb_title_3">Clearing out your room?</string>
+    <string name="onb_body_3">Bundle your items into a move-out sale and share it on WhatsApp in one tap.</string>
+    <string name="onb_next">Next</string>
+    <string name="onb_skip">Skip</string>
+    <string name="onb_start">Get started</string>
+
+</resources>

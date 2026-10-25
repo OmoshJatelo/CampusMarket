@@ -38,6 +38,7 @@ public class BundlesActivity extends AppCompatActivity {
     private Set<String> blocked = new HashSet<>();
     private Adapter adapter;
     private TextView emptyText;
+    private View emptyAction;
     private ListenerRegistration bundleListener, blockListener;
     private String uid;
 
@@ -62,6 +63,9 @@ public class BundlesActivity extends AppCompatActivity {
         });
 
         emptyText = findViewById(R.id.textBundlesEmpty);
+        emptyAction = findViewById(R.id.btnBundlesEmptyCreate);
+        emptyAction.setOnClickListener(v ->
+                startActivity(new Intent(this, CreateBundleActivity.class)));
         RecyclerView recycler = findViewById(R.id.recyclerBundles);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new Adapter(visible);
@@ -116,6 +120,7 @@ public class BundlesActivity extends AppCompatActivity {
         }
         adapter.notifyDataSetChanged();
         emptyText.setVisibility(visible.isEmpty() ? View.VISIBLE : View.GONE);
+        emptyAction.setVisibility(visible.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     // ---------------------------------------------------------------- adapter
