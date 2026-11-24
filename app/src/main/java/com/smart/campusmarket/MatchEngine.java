@@ -34,8 +34,8 @@ public final class MatchEngine {
     }
 
     private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
-            "the", "and", "for", "with", "used", "new", "good", "looking", "wanted", "want",
-            "need", "sale", "selling", "cheap", "very", "any", "one"));
+            "the", "and", "for", "with", "used", "new", "good", "looking", "wanted",
+            "want", "need", "sale", "selling", "cheap", "very", "any", "one"));
 
     /** Short product abbreviations that should be kept even though they are < 3 chars. */
     private static final Set<String> SHORT_KEEP = new HashSet<>(Arrays.asList("tv", "pc"));
@@ -83,14 +83,24 @@ public final class MatchEngine {
         boolean bothHaveCategory = wc != null && !wc.isEmpty() && sc != null && !sc.isEmpty();
         if (bothHaveCategory && !wc.equalsIgnoreCase(sc)) return false;
 
-        String wantedText = (wanted.getTitle() == null ? "" : wanted.getTitle()) + " " +
-                            (wanted.getDescription() == null ? "" : wanted.getDescription());
-        String saleText = (sale.getTitle() == null ? "" : sale.getTitle()) + " " +
-                          (sale.getDescription() == null ? "" : sale.getDescription());
-        Set<String> wantedWords = keywords(wantedText);
-        Set<String> saleWords = keywords(saleText);
-        wantedWords.retainAll(saleWords);
-        return !wantedWords.isEmpty();
+        String wantedTitle = wanted.getTitle() == null ? "" : wanted.getTitle();
+        String wantedDesc = wanted.getDescription() == null ? "" : wanted.getDescription();
+        String saleTitle = sale.getTitle() == null ? "" : sale.getTitle();
+        String saleDesc = sale.getDescription() == null ? "" : sale.getDescription();
+
+        // Title words of wanted match against title + description of sale
+        Set<String> wantedTitleWords = keywords(wantedTitle);
+        Set<String> saleTitleDescWords = keywords(saleTitle + " " + saleDesc);
+        wantedTitleWords.retainAll(saleTitleDescWords);
+        boolean titleHit = !wantedTitleWords.isEmpty();
+
+        // Description words of wanted match against title of sale ONLY (never sale description)
+        Set<String> wantedDescWords = keywords(wantedDesc);
+        Set<String> saleTitleWords = keywords(saleTitle);
+        wantedDescWords.retainAll(saleTitleWords);
+        boolean descHit = !wantedDescWords.isEmpty();
+
+        return titleHit || descHit;
     }
 
     private static Set<String> keywords(String text) {

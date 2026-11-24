@@ -211,6 +211,38 @@ public class MatchEngineTest {
     }
 
     @Test
+    public void wantedTitleWordFoundOnlyInSaleDescriptionMatches() {
+        Product w = wanted("w1", "128gb iPhone", 50000, "Electronics", "");
+        Product s = sale("s1", "iPhone 12", 45000, "Electronics", "128gb model");
+        assertTrue(MatchEngine.fits(w, s));
+    }
+
+    @Test
+    public void fillerWordInBothDescriptionsDoesNotMatch() {
+        // "condition" is a filler word that appears in both descriptions - should NOT match
+        Product w = wanted("w1", "iPhone", 50000, "Electronics", "good condition");
+        Product s = sale("s1", "Samsung Galaxy", 45000, "Electronics", "good condition");
+        assertFalse(MatchEngine.fits(w, s));
+    }
+
+    @Test
+    public void wantedDescriptionWordOnlyInSaleDescriptionDoesNotMatch() {
+        Product w = wanted("w1", "iPhone", 50000, "Electronics", "hostel pickup");
+        Product s = sale("s1", "Samsung Galaxy", 45000, "Electronics", "hostel pickup available");
+        assertFalse(MatchEngine.fits(w, s));
+    }
+
+    @Test
+    public void nullDescriptionDoesNotThrow() {
+        Product w = new Product("w1", Product.TYPE_WANTED, "iPhone", 50000, false, "Electronics", "good", "Campus",
+                null, "555-1234", new ArrayList<>(), NOW, FUTURE, Product.STATUS_ACTIVE, "me");
+        Product s = new Product("s1", Product.TYPE_SALE, "iPhone 12", 45000, false, "Electronics", "good", "Campus",
+                null, "555-1234", new ArrayList<>(), NOW, FUTURE, Product.STATUS_ACTIVE, "other");
+        // Should not throw
+        assertTrue(MatchEngine.fits(w, s));
+    }
+
+    @Test
     public void pluralFridgesMatchesFridge() {
         Product w = wanted("w1", "fridges", 50000, "Appliances", "");
         Product s = sale("s1", "fridge", 45000, "Appliances", "");
