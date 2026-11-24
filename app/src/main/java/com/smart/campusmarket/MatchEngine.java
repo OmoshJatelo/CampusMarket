@@ -2,9 +2,11 @@ package com.smart.campusmarket;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -32,8 +34,26 @@ public final class MatchEngine {
     }
 
     private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
-            "the", "and", "for", "with", "used", "new", "good", "looking", "wanted",
-            "want", "need", "sale", "selling", "cheap", "very", "any", "one"));
+            "the", "and", "for", "with", "used", "new", "good", "looking", "wanted", "want",
+            "need", "sale", "selling", "cheap", "very", "any", "one"));
+
+    /** Short product abbreviations that should be kept even though they are < 3 chars. */
+    private static final Set<String> SHORT_KEEP = new HashSet<>(Arrays.asList("tv", "pc"));
+
+    /**
+     * Synonym map: after lowercasing and plural stripping, replace token with canonical form.
+     * Extend by adding entries here; keep it small and unambiguous for campus marketplace terms.
+     */
+    private static final Map<String, String> SYNONYMS = new HashMap<>();
+    static {
+        SYNONYMS.put("refrigerator", "fridge");
+        SYNONYMS.put("television", "tv");
+        SYNONYMS.put("tvs", "tv");
+        SYNONYMS.put("pcs", "pc");
+        SYNONYMS.put("smartphone", "phone");
+        SYNONYMS.put("cellphone", "phone");
+        SYNONYMS.put("mobile", "phone");
+    }
 
     private MatchEngine() { }
 
@@ -63,8 +83,12 @@ public final class MatchEngine {
         boolean bothHaveCategory = wc != null && !wc.isEmpty() && sc != null && !sc.isEmpty();
         if (bothHaveCategory && !wc.equalsIgnoreCase(sc)) return false;
 
-        Set<String> wantedWords = keywords(wanted.getTitle());
-        Set<String> saleWords = keywords(sale.getTitle() + " " + sale.getDescription());
+        String wantedText = (wanted.getTitle() == null ? "" : wanted.getTitle()) + " " +
+                            (wanted.getDescription() == null ? "" : wanted.getDescription());
+        String saleText = (sale.getTitle() == null ? "" : sale.getTitle()) + " " +
+                          (sale.getDescription() == null ? "" : sale.getDescription());
+        Set<String> wantedWords = keywords(wantedText);
+        Set<String> saleWords = keywords(saleText);
         wantedWords.retainAll(saleWords);
         return !wantedWords.isEmpty();
     }
@@ -73,10 +97,14 @@ public final class MatchEngine {
         Set<String> out = new HashSet<>();
         if (text == null) return out;
         for (String word : text.toLowerCase(Locale.ROOT).split("[^a-z0-9]+")) {
-            if (word.length() < 3 || STOP_WORDS.contains(word)) continue;
+            if (word.length() < 3 && !SHORT_KEEP.contains(word)) continue;
+            if (STOP_WORDS.contains(word)) continue;
             if (word.length() > 3 && word.endsWith("s")) {
                 word = word.substring(0, word.length() - 1);   // "fridges" -> "fridge"
             }
+            // Apply synonym mapping after plural stripping
+            String canonical = SYNONYMS.get(word);
+            if (canonical != null) word = canonical;
             out.add(word);
         }
         return out;
