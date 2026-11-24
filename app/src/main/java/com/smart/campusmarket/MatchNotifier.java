@@ -40,11 +40,18 @@ public final class MatchNotifier {
         }
 
         List<MatchEngine.Match> matches = MatchEngine.findMatches(uid, activePosts);
-        if (matches.isEmpty()) return 0;
 
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String prefKey = "notified_" + uid;
         Set<String> seen = new HashSet<>(prefs.getStringSet(prefKey, new HashSet<String>()));
+        Set<String> originalSeen = new HashSet<>(seen); // keep copy to detect changes
+
+        // Prune stale keys: keep only those that are still current matches
+        Set<String> currentKeys = new HashSet<>();
+        for (MatchEngine.Match m : matches) {
+            currentKeys.add(m.key());
+        }
+        seen = pruneSeen(seen, currentKeys);
 
         ensureChannel(context);
         int shown = 0;
@@ -53,8 +60,26 @@ public final class MatchNotifier {
             NotificationManagerCompat.from(context).notify(m.key().hashCode(), build(context, m));
             shown++;
         }
-        if (shown > 0) prefs.edit().putStringSet(prefKey, seen).apply();
+        // Write back whenever the set differs from what was originally stored
+        if (!seen.equals(originalSeen)) {
+            prefs.edit().putStringSet(prefKey, seen).apply();
+        }
         return shown;
+    }
+
+    /**
+     * Returns a NEW set containing only entries of {@code seen} that are also in {@code currentKeys}.
+     * Never mutates the inputs; returns an empty set for null input.
+     */
+    static Set<String> pruneSeen(Set<String> seen, Set<String> currentKeys) {
+        if (seen == null || currentKeys == null) return new HashSet<>();
+        Set<String> result = new HashSet<>();
+        for (String key : seen) {
+            if (currentKeys.contains(key)) {
+                result.add(key);
+            }
+        }
+        return result;
     }
 
     private static android.app.Notification build(Context context, MatchEngine.Match m) {
